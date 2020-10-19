@@ -1,0 +1,44 @@
+#!/bin/sh
+
+###
+#
+# Wrapper used to link to the musl library embedded in the portable package
+# Environment variable 'qjs_cc' will be used only when compiling QuickJS
+#
+###
+
+script_dir="$( cd "$( dirname "${0}" )" >/dev/null && pwd )"
+
+# $1 version to check
+# $2 minimum version
+gte_version()
+{
+    _major=$(echo $1 | cut -d'.' -f1)
+    _major_minimum=$(echo $2 | cut -d'.' -f1)
+    _minor=$(echo $1 | cut -s -d'.' -f2)
+    [ -z ${_minor} ] && _minor=0
+    _minor_minimum=$(echo $2 | cut -s -d'.' -f2)
+    [ -z ${_minor_minimum} ] && _minor_minimum=0
+    [ ${_major} -lt ${_major_minimum} ] && return 1
+    [ ${_major} -gt ${_major_minimum} ] && return 0
+    [ ${_minor} -lt ${_minor_minimum} ] && return 1
+    return 0
+}
+
+musl_dir="${script_dir}/.."
+gcc_version=$(gcc -dumpversion)
+# extra gcc flags
+flags=""
+
+# only define new flags if ${qjs_cc} is not set (ie: if we're not building qjs)
+if [ -z ${qjs_cc} ]
+then
+    # '-no-pie' flag is supported for gcc >= 6.1
+    if gte_version ${gcc_version} "6.1"
+    then
+       flags="${flags} -no-pie"
+    fi
+fi
+
+#echo "musl_dir=${musl_dir} exec \"${qjs_cc:-gcc}\" \"$@\" ${flags} -specs \"${musl_dir}/lib/musl-gcc.specs\""
+musl_dir=${musl_dir} exec "${qjs_cc:-gcc}" "$@" ${flags} -specs "${musl_dir}/lib/musl-gcc.specs"

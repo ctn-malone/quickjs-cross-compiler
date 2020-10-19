@@ -1,0 +1,9 @@
+# QuickJS repository to clone
+qjs_repository="https://github.com/bellard/quickjs.git"
+
+default_qjs_version="2020-09-06"
+
+# mapping version tag => commit id
+declare -A qjs_versions=(
+    ["2020-09-06"]="7c312df422572cf867f29a1d80693e8a77f7fb2a"
+)

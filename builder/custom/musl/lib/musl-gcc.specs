@@ -1,0 +1,34 @@
+%rename cpp_options old_cpp_options
+
+*cpp_options:
+-nostdinc -isystem %:getenv(musl_dir /include) -isystem include%s %(old_cpp_options)
+
+*cc1:
+%(cc1_cpu) -nostdinc -isystem %:getenv(musl_dir /include) -isystem include%s
+
+*link_libgcc:
+-L %:getenv(musl_dir /lib) -L .%s
+
+*libgcc:
+libgcc.a%s %:if-exists(libgcc_eh.a%s)
+
+*startfile:
+%{!shared: %:getenv(musl_dir /lib/Scrt1.o)} %:getenv(musl_dir /lib/crti.o) crtbeginS.o%s
+
+*endfile:
+crtendS.o%s %:getenv(musl_dir /lib/crtn.o)
+
+*link:
+-dynamic-linker %:getenv(musl_dir /lib/ld-musl-x86_64.so.1) -nostdlib %{shared:-shared} %{static:-static} %{rdynamic:-export-dynamic}
+
+*esp_link:
+
+
+*esp_options:
+
+
+*esp_cpp_options:
+
+
+# comment to avoid gcc error "gcc: fatal error: specs file malformed after ..."
+# we need to have 2 lines after esp_cpp_options

@@ -1,0 +1,54 @@
+diff --git a/qjsc.c b/qjsc.c
+index f5bda57..7e1919d 100644
+--- a/qjsc.c
++++ b/qjsc.c
+@@ -370,6 +370,13 @@
+         printf("]\n"
+                "            disable selected language features (smaller code size)\n");
+     }
++#else
++    //-- define '-fbignum' if 'CONFIG_BIGNUM' is defined
++    #ifdef CONFIG_BIGNUM
++        {
++            printf("-fbignum    enable bignum extensions\n");
++        }
++    #endif
+ #endif
+     exit(1);
+ }
+@@ -401,6 +408,8 @@
+     const char **arg, *bn_suffix, *lto_suffix;
+     char libjsname[1024];
+     char exe_dir[1024], inc_dir[1024], lib_dir[1024], buf[1024], *p;
++    //-- used to store relative path to musl-gcc
++    char musl_gcc[1024];
+     int ret;
+     
+     /* get the directory of the executable */
+@@ -427,8 +436,15 @@
+     bn_suffix = "";
+     
+     arg = argv;
+-    *arg++ = CONFIG_CC;
++    //-- use included musl-gcc wrapper instead of default compiler
++    //*arg++ = CONFIG_CC;
++    snprintf(musl_gcc, sizeof(musl_gcc), "%s/musl-%s/bin/musl-gcc", exe_dir, MUSL_ARCH);
++    *arg++ = musl_gcc;
+     *arg++ = "-O2";
++    //-- force static compilation
++    *arg++ = "-static";
++    //-- strip
++    *arg++ = "-s";
+ #ifdef CONFIG_LTO
+     if (use_lto) {
+         *arg++ = "-flto";
+@@ -452,6 +468,8 @@
+     *arg++ = "-lm";
+     *arg++ = "-ldl";
+     *arg++ = "-lpthread";
++    //-- link to libatomic (armv7l)
++    *arg++ = "-latomic";
+     *arg = NULL;
+     
+     if (verbose) {
+
