@@ -15,6 +15,7 @@ Static compiler should work with any Linux distribution with *gcc* >= `4.3.2`
 **Table of content**
 - [Generate a portable package without using Docker](#generate-a-portable-package-without-using-docker)
 - [Generate a portable package using Docker](#generate-a-portable-package-using-docker)
+- [Using the portable compiler](#using-the-portable-compiler)
 - [Limitations](#limitations)
 
 # Generate a portable package using *Docker*
@@ -97,6 +98,52 @@ Above command will :
 * download and build necessary dependencies under `/usr/local/deps`
 * export portable package to `/usr/local/packages`
 * enable verbose mode
+
+# Using the portable compiler
+
+Assuming [package](https://github.com/ctn-malone/quickjs-cross-compiler/releases) was decompressed under `/usr/local/quickjs`, just run `/usr/local/quickjs/qjsc.sh` to compile a `.js` file
+
+<u>Example `hello.js` file</u>
+
+```javascript
+import * as std from "std";
+
+let name = 'world';
+if (undefined !== scriptArgs[1]) {
+    name = scriptArgs[1];
+}
+console.log(`Hello ${name} !`);
+
+while (true) {
+    console.log(`Type 'exit' to exit script`);
+    const str = std.in.getline();
+    if ('exit' == str) {
+        break;
+    }
+}   
+console.log(`Goodbye ${name}!`);
+```
+
+File can be compiled using
+
+```
+/usr/local/quickjs/qjsc.sh -o hello hello.js
+```
+
+```
+ls -l hello
+-rwxrwxr-x 1 user user 899160 oct.  19 15:32 hello
+```
+
+```
+file hello
+hello: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, stripped
+```
+
+```
+ldd hello
+        not a dynamic executable
+```
 
 # Limitations
 
