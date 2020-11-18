@@ -15,9 +15,9 @@ do
     binary_file="${script_dir}/${filename}"
     # add bignum extension if needed
     bignum_flag=""
-    if [ ${filename} == "pi_bigdecimal" ] || \
-       [ ${filename} == "pi_bigfloat" ] || \
-       [ ${filename} == "pi_bigfloat" ]
+    if [ ${filename} = "pi_bigdecimal" ] || \
+       [ ${filename} = "pi_bigfloat" ] || \
+       [ ${filename} = "pi_bigfloat" ]
     then
         bignum_flag="-fbignum"
     fi
