@@ -170,7 +170,7 @@ assign_positional_args 1 "${_positionals[@]}"
 # vvv  PLACE YOUR CODE HERE  vvv
 
 # ensure version exist
-qjs_commit="${qjs_versions[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[$_arg_qjs_version]}"
 if [ -z ${qjs_commit} ]
 then
     _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
@@ -267,6 +267,8 @@ custom_dir="${script_dir}/../custom"
 patch_qjs || die "Could not patch 'QuickJS'"
 # 'x86_64' version of the binary is needed to generate c files when doing cross-compilation
 cp ${custom_dir}/qjs/qjsc-x86_64 ${repo_dir} || die "Could not copy 'qjsc-x86_64' to repository"
+# copy extra source files
+cp -R ${custom_dir}/qjs/files/* ${repo_dir} || die "Could not copy extra source files to repository"
 create_musl_symlink || die "Could not create symlink to 'musl lib'"
 
 # ^^^  TERMINATE YOUR CODE BEFORE THE BOTTOM ARGBASH MARKER  ^^^

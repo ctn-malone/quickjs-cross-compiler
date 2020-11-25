@@ -16,6 +16,7 @@ Static compiler should work with any Linux distribution with *gcc* >= `4.3.2`
 - [Generate a portable package without using Docker](#generate-a-portable-package-without-using-docker)
 - [Generate a portable package using Docker](#generate-a-portable-package-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
+- [Embed custom javascript modules](#embed-cutom-javascript-modules)
 - [Limitations](#limitations)
 
 # Generate a portable package using *Docker*
@@ -27,10 +28,11 @@ A portable package containing interpreter & compiler can be generated using `doc
 ```
 ./docker/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-09-06')
-        -p, --packages-dir: directory where package will be exported (default: '/usr/local/src/quickjs-cross-compiler/docker/../packages')
+Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
+        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/docker/../packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+        -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
         -h, --help: Prints help
@@ -47,7 +49,7 @@ Above command will :
 * build a *Docker* image (only if it does not already exist) which will download and build necessary dependencies
 * run a temporary container and :
   * enable verbose mode inside the container
-  * build *default* *QuickJS* version (`2020-09-06` as of 2020-10-04) for *default* architecture (`x86_64`)
+  * build *default* *QuickJS* version (`2020-11-08` as of 2020-11-18) for *default* architecture (`x86_64`)
   * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
@@ -63,11 +65,12 @@ A portable package containing interpreter & compiler can be generated using `bui
 ```
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-09-06')
-        -p, --packages-dir: directory where package will be exported (default: '/usr/local/src/quickjs-cross-compiler/builder/../packages')
-        --deps-dir: directory where dependencies should be stored/buil (default: '/usr/local/src/quickjs-cross-compiler/builder/../deps')
+Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
+        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../packages')
+        --deps-dir: directory where dependencies should be stored/buil (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+        -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
         --force-checkout-qjs, --no-force-checkout-qjs: clone repository even if it exists (off by default)
@@ -85,16 +88,16 @@ Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <
 Above command will :
 
 * download and build necessary dependencies under *default* location (`deps` directory at the root of the repository)
-* build *default* *QuickJS* version (`2020-09-06` as of 2020-10-04) for *default* architecture (`x86_64`)
+* build *default* *QuickJS* version (`2020-11-08` as of 2020-10-04) for *default* architecture (`x86_64`)
 * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
-./builder/build_and_export_qjs.sh '2020-09-06' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
+./builder/build_and_export_qjs.sh '2020-11-08' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
 ```
 
 Above command will :
 
-* build *QuickJS* version `2020-09-06` for `armv7l` architecture
+* build *QuickJS* version `2020-11-08` for `armv7l` architecture
 * download and build necessary dependencies under `/usr/local/deps`
 * export portable package to `/usr/local/packages`
 * enable verbose mode
@@ -144,6 +147,80 @@ hello: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, s
 ldd hello
         not a dynamic executable
 ```
+
+# Embed custom javascript modules
+
+Starting from release `2020-11-08_2`, any javascript file placed alongside `qjs` & `qjsc` binaries can be referenced relatively from your main script.
+This allows to bundle adhoc packages containing javascript modules (argument parsing, ...) which can be shared across various scripts
+
+<u>Example</u>
+
+For a package containing an `ext` directory alongside `qjs` & `qjsc` binaries, file `ext/myExt.js` can be imported from any script using `import * as myExt from 'ext/myExt.js';`
+
+```
+.
+├── [4.0K]  examples
+├── [4.0K]  ext
+│   └── [ 335]  myExt.js
+├── [1.2M]  libquickjs.a
+├── [4.0K]  musl-x86_64
+│   │   └...
+│   └── [4.0K]  lib
+│       └...
+├── [938K]  qjs
+├── [894K]  qjsc
+├── [ 364]  qjsc.sh
+├── [ 425]  qjs.sh
+├── [ 40K]  quickjs.h
+└── [2.5K]  quickjs-libc.h
+```
+
+*ext/myExt.js*
+```javascript
+const sayHello = (name) => {
+    console.log(`Hello ${name}`);
+}
+
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const sayWeekday = () => {
+    const date = new Date();
+    const wday = WEEKDAYS[date.getDay()];
+    console.log(`Today is ${wday}`);
+}
+
+export default {
+    sayHello:sayHello,
+    sayWeekday:sayWeekday
+}
+export { sayHello, sayWeekday };
+```
+
+*myScript.js*
+```javascript
+import {sayHello, sayWeekday} from 'ext/myExt.js';
+sayHello('John Doe');
+sayWeekday();
+```
+
+Both interpreter & compiler will first try to resolve import relatively to current directory and fallback to the directory containing `qjs` & `qjsc` binaries
+
+<u>NB</u> : fallback will only work when calling `qjs` & `qjsc` using their **absolute path** or through their corresponding **`sh` wrappers**
+
+Directories can be added to the package using argument `(--extra-dir, -e)` when calling `build_and_export_qjs.sh` script
+
+<u>Examples</u>
+
+```
+./builder/build_and_export_qjs.sh -e /tmp/ext1 -e /tmp/ext2
+```
+
+Above command will copy `/tmp/ext1` & `/tmp/ext2` directories at the root of the package
+
+```
+./builder/build_and_export_qjs.sh -e /tmp/ext1:ext -e /tmp/ext2:ext
+```
+
+Above command will copy **the content** of `/tmp/ext1` & `/tmp/ext2` directories into an `ext` subdirectory at the root of the package
 
 # Limitations
 

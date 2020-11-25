@@ -3,8 +3,14 @@ qjs_repository="https://github.com/bellard/quickjs.git"
 
 default_qjs_version="2020-11-08"
 
-# mapping version tag => commit id
-declare -A qjs_versions=(
+# mapping qjs version => commit id
+declare -A qjs_commits=(
     ["2020-09-06"]="7c312df422572cf867f29a1d80693e8a77f7fb2a"
     ["2020-11-08"]="204682fb87ab9312f0cf81f959ecd181180457bc"
+)
+
+# mapping qjs version => package name
+declare -A qjs_packages=(
+    ["2020-09-06"]="2020-09-06"
+    ["2020-11-08"]="2020-11-08_2"
 )

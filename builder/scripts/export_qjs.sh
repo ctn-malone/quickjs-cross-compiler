@@ -4,6 +4,7 @@
 #
 # Export a portable package which can be used to generate static binaries
 # - strip binaries & static libraries
+# - add extra directories (optional)
 # - generate an archive compressed with xz
 #
 ###
@@ -16,6 +17,7 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../../packages])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
+# ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
 # ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l])
 # ARG_HELP([Export a tarball containing a static version of QuickJS and a static version of musl library])
@@ -49,7 +51,7 @@ arch()
 
 begins_with_short_option()
 {
-	local first_option all_short_options='dpvah'
+	local first_option all_short_options='dpvaeh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -62,17 +64,19 @@ _arg_deps_dir="$script_dir/../../deps"
 _arg_packages_dir="$script_dir/../../packages"
 _arg_verbose="off"
 _arg_arch="x86_64"
+_arg_extra_dir=()
 
 
 print_help()
 {
 	printf '%s\n' "Export a tarball containing a static version of QuickJS and a static version of musl library"
-	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-a|--arch <type string>] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-a|--arch <type string>] [-e|--extra-dir <arg>] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../../packages')"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -129,6 +133,17 @@ parse_commandline()
 			-a*)
 				_arg_arch="$(arch "${_key##-a}" "arch")" || exit 1
 				;;
+			-e|--extra-dir)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_extra_dir+=("$2")
+				shift
+				;;
+			--extra-dir=*)
+				_arg_extra_dir+=("${_key##--extra-dir=}")
+				;;
+			-e*)
+				_arg_extra_dir+=("${_key##-e}")
+				;;
 			-h|--help)
 				print_help
 				exit 0
@@ -182,17 +197,31 @@ assign_positional_args 1 "${_positionals[@]}"
 
 # vvv  PLACE YOUR CODE HERE  vvv
 
-# ensure version exist
-qjs_commit="${qjs_versions[$_arg_qjs_version]}"
+# ensure version exists
+qjs_commit="${qjs_commits[$_arg_qjs_version]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
+    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported (commit unknown)"
+fi
+
+# ensure package name exists
+qjs_package="${qjs_packages[$_arg_qjs_version]}"
+if [ -z ${qjs_package} ]
+then
+    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported (package unknown)"
+fi
+
+package_type=core
+if ! [ -z $_arg_extra_dir ]
+then
+    # we have been given directories to add to package
+    package_type=ext
 fi
 
 # export QuickJS
 export_qjs()
 {
-    [ $_arg_verbose == "on" ] && echo "Exporting 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'..."
+    [ $_arg_verbose == "on" ] && echo "Exporting 'QuickJS' version '${_arg_qjs_version}' (${package_type}) for '${_arg_arch}'..."
 
     if ! [ -d ${repo_dir} ]
     then
@@ -221,7 +250,7 @@ export_qjs()
     fi
 
     # name of the package which will be exported
-    _package_name="quickjs.${_arg_qjs_version}.${_arg_arch}"
+    _package_name="quickjs.${package_type}.${qjs_package}.${_arg_arch}"
     # directory where package will be exported
     _package_dir="${packages_dir}/${_package_name}"
     # name of the exported tarball
@@ -276,18 +305,48 @@ export_qjs()
         cp ${_file} ${_package_dir}/examples || return 1
     done
 
+    # copy extra directories
+    for _dir in ${_arg_extra_dir[@]}
+    do
+        # it might have been passed using format src:dest
+        _src=$(echo ${_dir} | cut -d ':' -f1)
+        _dest=$(echo ${_dir} | cut -d ':' -f2)
+        # no destination was given
+        if [ -z ${_dest} ] || [ ${_src} == ${_dest} ]
+        then
+            # copy directory
+            cp -R ${_src} ${_package_dir} || return 1
+        else
+            _dirname=$(basename ${_dest})
+            # copy directory content
+            mkdir -p ${_package_dir}/${_dirname} || return 1
+            cp -R ${_src}/* ${_package_dir}/${_dirname} || return 1
+        fi
+    done
+
     # copy all scripts from 'custom' directory
     cp -R ${custom_dir}/qjs/scripts/* ${_package_dir} || return 1
+
+    # copy README
+    cp -R ${custom_dir}/README.md ${_package_dir} || return 1
 
     # compress directory
     (cd ${packages_dir} &&
         tar -C ${packages_dir} -cJf ${_package_tarball_filename} ${_package_name} && \
         rm -fr ${_package_dir}) || return 1
 
-    [ $_arg_verbose == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' successfully exported for '${_arg_arch}' into '${_arg_packages_dir}'"
+    [ $_arg_verbose == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' (${package_type}) successfully exported for '${_arg_arch}' to '${_arg_packages_dir}/${_package_tarball_filename}'"
 
     return 0
 }
+
+# ensure all extra directories which should be copied exist
+for _dir in ${_arg_extra_dir[@]}
+do
+    # it might have been passed using format src:dest
+    _src=$(echo ${_dir} | cut -d ':' -f 1)
+    ([ -z ${_src} ] || ! [ -d ${_src} ]) && die "Extra directory '${_src}' does not exist"
+done
 
 _PRINT_HELP=no
 repo_dir="${script_dir}/../../quickjs-repo"

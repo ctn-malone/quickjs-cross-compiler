@@ -13,6 +13,7 @@ source "${script_dir}/../builder/env/qjs"
 # Created by argbash-init v2.10.0
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../packages])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
+# ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_OPTIONAL_BOOLEAN([force-build-image],[],[force rebuilding docker image],[off])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
@@ -48,7 +49,7 @@ arch()
 
 begins_with_short_option()
 {
-	local first_option all_short_options='pavh'
+	local first_option all_short_options='paevh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -59,6 +60,7 @@ _arg_qjs_version="$default_qjs_version"
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_packages_dir="$script_dir/../packages"
 _arg_arch="x86_64"
+_arg_extra_dir=()
 _arg_force_build_image="off"
 _arg_verbose="off"
 
@@ -66,10 +68,11 @@ _arg_verbose="off"
 print_help()
 {
 	printf '%s\n' "Build a static version of QuickJS (interpreter & compiler)"
-	printf 'Usage: %s [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-p|--packages-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../packages')"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "--force-build-image, --no-force-build-image: force rebuilding docker image (off by default)"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
 	printf '\t%s\n' "-h, --help: Prints help"
@@ -104,6 +107,17 @@ parse_commandline()
 				;;
 			-a*)
 				_arg_arch="$(arch "${_key##-a}" "arch")" || exit 1
+				;;
+			-e|--extra-dir)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_extra_dir+=("$2")
+				shift
+				;;
+			--extra-dir=*)
+				_arg_extra_dir+=("${_key##--extra-dir=}")
+				;;
+			-e*)
+				_arg_extra_dir+=("${_key##-e}")
 				;;
 			--no-force-build-image|--force-build-image)
 				_arg_force_build_image="on"
@@ -175,7 +189,7 @@ assign_positional_args 1 "${_positionals[@]}"
 # vvv  PLACE YOUR CODE HERE  vvv
 
 # ensure version exist
-qjs_commit="${qjs_versions[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[$_arg_qjs_version]}"
 if [ -z ${qjs_commit} ]
 then
     _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
@@ -197,13 +211,17 @@ build_docker_image()
 
 build_and_export_package()
 {
-    # check if image exist
     _image_name="quickjs-cross-compiler:${_arg_arch}"
 
     _flag_verbose=""
     [ $_arg_verbose == "on" ] && _flag_verbose="-v"
+    args_extra_dir=""
+    for a in ${_arg_extra_dir[@]}
+    do
+        args_extra_dir="${args_extra_dir} -e ${a}"
+    done
 
-    _docker_cmd="./build_and_export_qjs.sh ${_flag_verbose} -a ${_arg_arch}"
+    _docker_cmd="./build_and_export_qjs.sh ${_flag_verbose} -a ${_arg_arch} ${args_extra_dir}"
 
     (mkdir -p ${_arg_packages_dir} && \
         docker run --rm \

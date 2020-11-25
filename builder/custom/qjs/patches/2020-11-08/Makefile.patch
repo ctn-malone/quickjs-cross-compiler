@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index e6ae827..3ff969a 100644
+index e6ae827..e36b8c4 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -28,7 +28,8 @@ endif
@@ -73,6 +73,15 @@ index e6ae827..3ff969a 100644
  ifndef CONFIG_DARWIN
  PROGS+=examples/fib.so examples/point.so
  endif
+@@ -166,7 +182,7 @@ endif
+ 
+ all: $(OBJDIR) $(OBJDIR)/quickjs.check.o $(OBJDIR)/qjs.check.o $(PROGS)
+ 
+-QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o
++QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o $(OBJDIR)/path.o
+ 
+ QJS_OBJS=$(OBJDIR)/qjs.o $(OBJDIR)/repl.o $(QJS_LIB_OBJS)
+ ifdef CONFIG_BIGNUM
 @@ -180,6 +196,9 @@ ifndef CONFIG_WIN32
  LIBS+=-ldl -lpthread
  endif

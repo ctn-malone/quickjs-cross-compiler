@@ -185,7 +185,7 @@ assign_positional_args 1 "${_positionals[@]}"
 source "${script_dir}/../env/qjs"
 
 # ensure version exist
-qjs_commit="${qjs_versions[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[$_arg_qjs_version]}"
 if [ -z ${qjs_commit} ]
 then
     _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"

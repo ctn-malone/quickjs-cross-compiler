@@ -14,6 +14,7 @@ source "${script_dir}/env/qjs"
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../packages])
 # ARG_OPTIONAL_SINGLE([deps-dir],[],[directory where dependencies should be stored/buil],[$script_dir/../deps])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
+# ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_OPTIONAL_BOOLEAN([force-fetch-deps],[],[force re-fetching dependencies],[off])
 # ARG_OPTIONAL_BOOLEAN([force-build-deps],[],[force rebuild of dependencies],[off])
 # ARG_OPTIONAL_BOOLEAN([force-checkout-qjs],[],[clone repository even if it exists],[off])
@@ -52,7 +53,7 @@ arch()
 
 begins_with_short_option()
 {
-	local first_option all_short_options='pavh'
+	local first_option all_short_options='paevh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -64,6 +65,7 @@ _arg_qjs_version="$default_qjs_version"
 _arg_packages_dir="$script_dir/../packages"
 _arg_deps_dir="$script_dir/../deps"
 _arg_arch="x86_64"
+_arg_extra_dir=()
 _arg_force_fetch_deps="off"
 _arg_force_build_deps="off"
 _arg_force_checkout_qjs="off"
@@ -74,11 +76,12 @@ _arg_verbose="off"
 print_help()
 {
 	printf '%s\n' "Build a static version of QuickJS (interpreter & compiler)"
-	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../packages')"
 	printf '\t%s\n' "--deps-dir: directory where dependencies should be stored/buil (default: '$script_dir/../deps')"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "--force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)"
 	printf '\t%s\n' "--force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)"
 	printf '\t%s\n' "--force-checkout-qjs, --no-force-checkout-qjs: clone repository even if it exists (off by default)"
@@ -124,6 +127,17 @@ parse_commandline()
 				;;
 			-a*)
 				_arg_arch="$(arch "${_key##-a}" "arch")" || exit 1
+				;;
+			-e|--extra-dir)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_extra_dir+=("$2")
+				shift
+				;;
+			--extra-dir=*)
+				_arg_extra_dir+=("${_key##--extra-dir=}")
+				;;
+			-e*)
+				_arg_extra_dir+=("${_key##-e}")
 				;;
 			--no-force-fetch-deps|--force-fetch-deps)
 				_arg_force_fetch_deps="on"
@@ -209,7 +223,7 @@ assign_positional_args 1 "${_positionals[@]}"
 source "${script_dir}/env/qjs"
 
 # ensure version exist
-qjs_commit="${qjs_versions[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[$_arg_qjs_version]}"
 if [ -z ${qjs_commit} ]
 then
     _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
@@ -240,7 +254,12 @@ build_qjs()
 }
 
 build_qjs || exit 1
-${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} || exit 1
+args_extra_dir=""
+for a in ${_arg_extra_dir[@]}
+do
+    args_extra_dir="${args_extra_dir} -e ${a}"
+done
+${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_extra_dir} || exit 1
 
 echo "Successfully built & exported 'QuickJS' version '$_arg_qjs_version' for '${_arg_arch}'"
 
