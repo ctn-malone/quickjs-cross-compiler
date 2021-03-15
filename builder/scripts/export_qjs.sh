@@ -376,6 +376,12 @@ export_qjs()
     # copy all scripts from 'custom' directory
     cp -R ${custom_dir}/qjs/scripts/* ${_package_dir} || return 1
 
+    # copy ext lib examples
+    if [ $_arg_ext_lib == "on" ]
+    then
+        cp -R ${custom_dir}/qjs/examples/ext-lib ${_package_dir}/examples || return 1
+    fi
+
     # copy README
     cp -R ${custom_dir}/README.md ${_package_dir} || return 1
 

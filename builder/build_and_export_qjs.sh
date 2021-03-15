@@ -272,16 +272,16 @@ build_qjs()
 }
 
 build_qjs || exit 1
-args_extra_dir=""
-for a in ${_arg_extra_dir[@]}
-do
-    args_extra_dir="${args_extra_dir} -e ${a}"
-done
 args_qjs_ext_lib=""
 if [ $_arg_ext_lib == "on" ]
 then
     args_qjs_ext_lib="--ext-lib --ext-lib-version $_arg_ext_lib_version"
 fi
+args_extra_dir=""
+for a in ${_arg_extra_dir[@]}
+do
+    args_extra_dir="${args_extra_dir} -e ${a}"
+done
 echo "${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir}"
 ${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} || exit 1
 

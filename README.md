@@ -29,10 +29,12 @@ A portable package containing interpreter & compiler can be generated using `doc
 ```
 ./docker/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
         -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/docker/../packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+        --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
+        --ext-lib-version: QuickJS extension library version (default: '0.1.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
@@ -229,7 +231,7 @@ Above command will copy **the content** of `/tmp/ext1` & `/tmp/ext2` directories
 
 When using flag `--ext-lib`, [QuickJS extension library](https://github.com/ctn-malone/qjs-ext-lib) will be added to the package under `ext` directory
 
-This library contains a set of JS module to make creating static adhoc scripts easier 
+This library contains a set of JS module to make creating static adhoc scripts easier
 
 # Limitations
 
