@@ -14,6 +14,8 @@ source "${script_dir}/env/qjs"
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../packages])
 # ARG_OPTIONAL_SINGLE([deps-dir],[],[directory where dependencies should be stored/buil],[$script_dir/../deps])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
+# ARG_OPTIONAL_BOOLEAN([ext-lib],[],[add QuickJS extension library],[off])
+# ARG_OPTIONAL_SINGLE([ext-lib-version],[],[QuickJS extension library version],[$default_qjs_ext_lib_version])
 # ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_OPTIONAL_BOOLEAN([force-fetch-deps],[],[force re-fetching dependencies],[off])
 # ARG_OPTIONAL_BOOLEAN([force-build-deps],[],[force rebuild of dependencies],[off])
@@ -65,6 +67,8 @@ _arg_qjs_version="$default_qjs_version"
 _arg_packages_dir="$script_dir/../packages"
 _arg_deps_dir="$script_dir/../deps"
 _arg_arch="x86_64"
+_arg_ext_lib="off"
+_arg_ext_lib_version="$default_qjs_ext_lib_version"
 _arg_extra_dir=()
 _arg_force_fetch_deps="off"
 _arg_force_build_deps="off"
@@ -76,11 +80,13 @@ _arg_verbose="off"
 print_help()
 {
 	printf '%s\n' "Build a static version of QuickJS (interpreter & compiler)"
-	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../packages')"
 	printf '\t%s\n' "--deps-dir: directory where dependencies should be stored/buil (default: '$script_dir/../deps')"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "--ext-lib, --no-ext-lib: add QuickJS extension library (off by default)"
+	printf '\t%s\n' "--ext-lib-version: QuickJS extension library version (default: '$default_qjs_ext_lib_version')"
 	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "--force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)"
 	printf '\t%s\n' "--force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)"
@@ -127,6 +133,18 @@ parse_commandline()
 				;;
 			-a*)
 				_arg_arch="$(arch "${_key##-a}" "arch")" || exit 1
+				;;
+			--no-ext-lib|--ext-lib)
+				_arg_ext_lib="on"
+				test "${1:0:5}" = "--no-" && _arg_ext_lib="off"
+				;;
+			--ext-lib-version)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_ext_lib_version="$2"
+				shift
+				;;
+			--ext-lib-version=*)
+				_arg_ext_lib_version="${_key##--ext-lib-version=}"
 				;;
 			-e|--extra-dir)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -259,7 +277,13 @@ for a in ${_arg_extra_dir[@]}
 do
     args_extra_dir="${args_extra_dir} -e ${a}"
 done
-${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_extra_dir} || exit 1
+args_qjs_ext_lib=""
+if [ $_arg_ext_lib == "on" ]
+then
+    args_qjs_ext_lib="--ext-lib --ext-lib-version $_arg_ext_lib_version"
+fi
+echo "${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir}"
+${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} || exit 1
 
 echo "Successfully built & exported 'QuickJS' version '$_arg_qjs_version' for '${_arg_arch}'"
 

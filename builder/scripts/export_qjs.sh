@@ -17,6 +17,8 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../../packages])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
+# ARG_OPTIONAL_BOOLEAN([ext-lib],[],[add QuickJS extension library],[off])
+# ARG_OPTIONAL_SINGLE([ext-lib-version],[],[QuickJS extension library version],[$default_qjs_ext_lib_version])
 # ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
 # ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l])
@@ -64,18 +66,22 @@ _arg_deps_dir="$script_dir/../../deps"
 _arg_packages_dir="$script_dir/../../packages"
 _arg_verbose="off"
 _arg_arch="x86_64"
+_arg_ext_lib="off"
+_arg_ext_lib_version="$default_qjs_ext_lib_version"
 _arg_extra_dir=()
 
 
 print_help()
 {
 	printf '%s\n' "Export a tarball containing a static version of QuickJS and a static version of musl library"
-	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-a|--arch <type string>] [-e|--extra-dir <arg>] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../../packages')"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "--ext-lib, --no-ext-lib: add QuickJS extension library (off by default)"
+	printf '\t%s\n' "--ext-lib-version: QuickJS extension library version (default: '$default_qjs_ext_lib_version')"
 	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "-h, --help: Prints help"
 }
@@ -132,6 +138,18 @@ parse_commandline()
 				;;
 			-a*)
 				_arg_arch="$(arch "${_key##-a}" "arch")" || exit 1
+				;;
+			--no-ext-lib|--ext-lib)
+				_arg_ext_lib="on"
+				test "${1:0:5}" = "--no-" && _arg_ext_lib="off"
+				;;
+			--ext-lib-version)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_ext_lib_version="$2"
+				shift
+				;;
+			--ext-lib-version=*)
+				_arg_ext_lib_version="${_key##--ext-lib-version=}"
 				;;
 			-e|--extra-dir)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -212,7 +230,7 @@ then
 fi
 
 package_type=core
-if ! [ -z $_arg_extra_dir ]
+if ! [ -z $_arg_extra_dir ] || [ $_arg_ext_lib == "on" ]
 then
     # we have been given directories to add to package
     package_type=ext
@@ -251,6 +269,11 @@ export_qjs()
 
     # name of the package which will be exported
     _package_name="quickjs.${package_type}.${qjs_package}.${_arg_arch}"
+    # add qjs ext lib to the name if it has been added
+    if [ $_arg_ext_lib == "on" ]
+    then
+        _package_name="quickjs.${package_type}.${qjs_package}.ext-lib-$_arg_ext_lib_version.${_arg_arch}"
+    fi
     # directory where package will be exported
     _package_dir="${packages_dir}/${_package_name}"
     # name of the exported tarball
@@ -304,6 +327,32 @@ export_qjs()
         ! [ -f ${_file} ] && continue
         cp ${_file} ${_package_dir}/examples || return 1
     done
+
+    # copy ext lib
+    if [ $_arg_ext_lib == "on" ]
+    then
+        _ext_lib_tmp_dir=${_package_dir}/.ext_lib
+        rm -fr ${_ext_lib_tmp_dir} && \
+            git clone ${qjs_ext_lib_repository} ${_ext_lib_tmp_dir}
+        if [ $? -ne 0 ]
+        then
+            echo "Could not retrieve QuickJS extension library '${_arg_ext_lib_version}'" 1>&2
+            return 1
+        fi
+        if [ ${_arg_ext_lib_version} != "master" ]
+        then
+            cd ${_ext_lib_tmp_dir} && git checkout tags/${_arg_ext_lib_version}
+            if [ $? -ne 0 ]
+            then
+                echo "Could not retrieve QuickJS extension library '${_arg_ext_lib_version}'" 1>&2
+                return 1
+            fi
+        fi
+        # copy src files
+        mkdir -p ${_package_dir}/ext && \
+            cp -R ${_ext_lib_tmp_dir}/src/* ${_package_dir}/ext && \
+            rm -fr ${_ext_lib_tmp_dir}
+    fi
 
     # copy extra directories
     for _dir in ${_arg_extra_dir[@]}

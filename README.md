@@ -17,6 +17,7 @@ Static compiler should work with any Linux distribution with *gcc* >= `4.3.2`
 - [Generate a portable package using Docker](#generate-a-portable-package-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
 - [Embed custom javascript modules](#embed-cutom-javascript-modules)
+- [Embed QuickJS extension library](#embed-quickjs-extension-library)
 - [Limitations](#limitations)
 
 # Generate a portable package using *Docker*
@@ -65,11 +66,13 @@ A portable package containing interpreter & compiler can be generated using `bui
 ```
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
         -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../packages')
         --deps-dir: directory where dependencies should be stored/buil (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+        --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
+        --ext-lib-version: QuickJS extension library version (default: '0.1.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
@@ -221,6 +224,12 @@ Above command will copy `/tmp/ext1` & `/tmp/ext2` directories at the root of the
 ```
 
 Above command will copy **the content** of `/tmp/ext1` & `/tmp/ext2` directories into an `ext` subdirectory at the root of the package
+
+# Embed QuickJS extension library
+
+When using flag `--ext-lib`, [QuickJS extension library](https://github.com/ctn-malone/qjs-ext-lib) will be added to the package under `ext` directory
+
+This library contains a set of JS module to make creating static adhoc scripts easier 
 
 # Limitations
 
