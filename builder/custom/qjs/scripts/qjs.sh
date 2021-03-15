@@ -12,5 +12,12 @@
 #
 ###
 
+# ensure we're returning exit code from child process
+trap ignore 2
+
+ignore() {
+    :
+}
+
 script_dir="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 ${script_dir}/qjs "$@"
