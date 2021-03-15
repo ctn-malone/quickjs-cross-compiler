@@ -10,7 +10,7 @@ Cross compilation is performed using [musl.cc](https://musl.cc/) static compiler
 
 Final portable version should weight around 7MB (after decompression)
 
-Static compiler should work with any Linux distribution with *gcc* >= `4.3.2`
+Static compiler should work with any Linux distribution with *gcc* >= `4.3.2` and *binutils* >= `2.26`
 
 **Table of content**
 - [Generate a portable package without using Docker](#generate-a-portable-package-without-using-docker)
