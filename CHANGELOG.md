@@ -1,5 +1,9 @@
 # Change Log
 
+## [2021-03-27_1]
+
+* QuickJS release `2021-03-27`
+
 ## [2020-11-08_3]
 
 * Possibility to embed https://github.com/ctn-malone/qjs-ext-lib when building packages
