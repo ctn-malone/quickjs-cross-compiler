@@ -5,6 +5,7 @@ Following target architectures are supported
 * x86_64
 * i686
 * armv7l
+* aarch64
 
 Cross compilation is performed using [musl.cc](https://musl.cc/) static compilers (which means you should be able to generate a portable package of *QuickJS* from any recent *x86_64* Linux distribution with *gcc*)
 
@@ -29,12 +30,12 @@ A portable package containing interpreter & compiler can be generated using `doc
 ```
 ./docker/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
-        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/docker/../packages')
-        -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2021-03-27')
+        -p, --packages-dir: directory where package will be exported (default: './packages')
+        -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.1.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.3.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
@@ -56,7 +57,7 @@ Above command will :
   * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
-for arch in x86_64 i686 armv7l ; do ./docker/build_and_export_qjs.sh -va ${arch} ; done
+for arch in x86_64 i686 armv7l aarch64 ; do ./docker/build_and_export_qjs.sh -va ${arch} ; done
 ```
 
 Same as previous command but will build packages for multiple target architectures
@@ -68,13 +69,13 @@ A portable package containing interpreter & compiler can be generated using `bui
 ```
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2020-11-08')
-        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../packages')
-        --deps-dir: directory where dependencies should be stored/buil (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../deps')
-        -a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')
+Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2021-03-27')
+        -p, --packages-dir: directory where package will be exported (default: './packages')
+        --deps-dir: directory where dependencies should be stored/buil (default: './deps')
+        -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.1.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.3.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
@@ -93,16 +94,16 @@ Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-
 Above command will :
 
 * download and build necessary dependencies under *default* location (`deps` directory at the root of the repository)
-* build *default* *QuickJS* version (`2020-11-08` as of 2020-10-04) for *default* architecture (`x86_64`)
+* build *default* *QuickJS* version (`2021-03-27` as of 2021-03-28) for *default* architecture (`x86_64`)
 * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
-./builder/build_and_export_qjs.sh '2020-11-08' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
+./builder/build_and_export_qjs.sh '2021-03-27' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
 ```
 
 Above command will :
 
-* build *QuickJS* version `2020-11-08` for `armv7l` architecture
+* build *QuickJS* version `2021-03-27` for `armv7l` architecture
 * download and build necessary dependencies under `/usr/local/deps`
 * export portable package to `/usr/local/packages`
 * enable verbose mode

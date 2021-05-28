@@ -16,7 +16,7 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_BOOLEAN([force],[f],[force rebuild],[off])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
-# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l])
+# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l,aarch64])
 # ARG_HELP([Build a static version of QuickJS (interpreter & compiler)])
 # ARGBASH_GO()
 # needed because of Argbash --> m4_ignore([
@@ -37,12 +37,12 @@ die()
 
 arch()
 {
-	local _allowed=("x86_64" "i686" "armv7l") _seeking="$1"
+	local _allowed=("x86_64" "i686" "armv7l" "aarch64") _seeking="$1"
 	for element in "${_allowed[@]}"
 	do
 		test "$element" = "$_seeking" && echo "$element" && return 0
 	done
-	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686' and 'armv7l'" 4
+	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686', 'armv7l' and 'aarch64'" 4
 }
 
 
@@ -69,7 +69,7 @@ print_help()
 	printf 'Usage: %s [-d|--deps-dir <arg>] [-a|--arch <type string>] [-f|--(no-)force] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
-	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')"
 	printf '\t%s\n' "-f, --force, --no-force: force rebuild (off by default)"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
 	printf '\t%s\n' "-h, --help: Prints help"

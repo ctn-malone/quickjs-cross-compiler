@@ -21,7 +21,7 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_SINGLE([ext-lib-version],[],[QuickJS extension library version],[$default_qjs_ext_lib_version])
 # ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
-# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l])
+# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l,aarch64])
 # ARG_HELP([Export a tarball containing a static version of QuickJS and a static version of musl library])
 # ARGBASH_GO()
 # needed because of Argbash --> m4_ignore([
@@ -42,12 +42,12 @@ die()
 
 arch()
 {
-	local _allowed=("x86_64" "i686" "armv7l") _seeking="$1"
+	local _allowed=("x86_64" "i686" "armv7l" "aarch64") _seeking="$1"
 	for element in "${_allowed[@]}"
 	do
 		test "$element" = "$_seeking" && echo "$element" && return 0
 	done
-	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686' and 'armv7l'" 4
+	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686', 'armv7l' and 'aarch64'" 4
 }
 
 
@@ -79,7 +79,7 @@ print_help()
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../../packages')"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
-	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')"
 	printf '\t%s\n' "--ext-lib, --no-ext-lib: add QuickJS extension library (off by default)"
 	printf '\t%s\n' "--ext-lib-version: QuickJS extension library version (default: '$default_qjs_ext_lib_version')"
 	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"

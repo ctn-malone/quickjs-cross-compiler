@@ -15,7 +15,7 @@ script_dir="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)" || { echo "Couldn't
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
 # ARG_OPTIONAL_BOOLEAN([force],[f],[rebuild image even if it exists],[off])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
-# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l])
+# ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l,aarch64])
 # ARG_HELP([Build a Docker image which can be used to cross-compile QuickJS])
 # ARGBASH_GO()
 # needed because of Argbash --> m4_ignore([
@@ -36,12 +36,12 @@ die()
 
 arch()
 {
-	local _allowed=("x86_64" "i686" "armv7l") _seeking="$1"
+	local _allowed=("x86_64" "i686" "armv7l" "aarch64") _seeking="$1"
 	for element in "${_allowed[@]}"
 	do
 		test "$element" = "$_seeking" && echo "$element" && return 0
 	done
-	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686' and 'armv7l'" 4
+	die "Value '$_seeking' (of argument '$2') doesn't match the list of allowed values: 'x86_64', 'i686', 'armv7l' and 'aarch64'" 4
 }
 
 
@@ -62,7 +62,7 @@ print_help()
 {
 	printf '%s\n' "Build a Docker image which can be used to cross-compile QuickJS"
 	printf 'Usage: %s [-a|--arch <type string>] [-f|--(no-)force] [-v|--(no-)verbose] [-h|--help]\n' "$0"
-	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686' and 'armv7l' (default: 'x86_64')"
+	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')"
 	printf '\t%s\n' "-f, --force, --no-force: rebuild image even if it exists (off by default)"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
 	printf '\t%s\n' "-h, --help: Prints help"

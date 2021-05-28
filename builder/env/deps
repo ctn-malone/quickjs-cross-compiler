@@ -25,3 +25,10 @@ declare -A cfg_musl_cc_armv7l=(
     ["archive_dir"]="armv7l-linux-musleabihf-cross"
     ["archive_dir_symlink"]="musl_cc-armv7l"
 )
+
+# musl.cc cross-compiler for aarch64 target
+declare -A cfg_musl_cc_aarch64=(
+    ["archive_url"]="https://musl.cc/aarch64-linux-musl-cross.tgz"
+    ["archive_dir"]="aarch64-linux-musl-cross"
+    ["archive_dir_symlink"]="musl_cc-aarch64"
+)

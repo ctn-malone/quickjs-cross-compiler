@@ -5,6 +5,7 @@ Following target architectures are supported
 * x86_64
 * i686
 * armv7l
+* aarch64
 
 Cross compilation is performed using [musl.cc](https://musl.cc/) static compilers (which means you should be able to generate a portable package of *QuickJS* from any recent *x86_64* Linux distribution with *gcc*)
 
