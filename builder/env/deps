@@ -7,28 +7,32 @@ declare -A cfg_musl_lib=(
 
 # musl.cc cross-compiler for x86_64 target
 declare -A cfg_musl_cc_x86_64=(
-    ["archive_url"]="https://musl.cc/x86_64-linux-musl-cross.tgz"
+    #["archive_url"]="https://musl.cc/x86_64-linux-musl-cross.tgz"
+    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/x86_64-linux-musl-cross.tgz"
     ["archive_dir"]="x86_64-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-x86_64"
 )
 
 # musl.cc cross-compiler for i686 target
 declare -A cfg_musl_cc_i686=(
-    ["archive_url"]="https://musl.cc/i686-linux-musl-cross.tgz"
+    #["archive_url"]="https://musl.cc/i686-linux-musl-cross.tgz"
+    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/i686-linux-musl-cross.tgz"
     ["archive_dir"]="i686-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-i686"
 )
 
 # musl.cc cross-compiler for armv7l target
 declare -A cfg_musl_cc_armv7l=(
-    ["archive_url"]="https://musl.cc/armv7l-linux-musleabihf-cross.tgz"
+    #["archive_url"]="https://musl.cc/armv7l-linux-musleabihf-cross.tgz"
+    ["archive_dir"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/armv7l-linux-musleabihf-cross.tgz"
     ["archive_dir"]="armv7l-linux-musleabihf-cross"
     ["archive_dir_symlink"]="musl_cc-armv7l"
 )
 
 # musl.cc cross-compiler for aarch64 target
 declare -A cfg_musl_cc_aarch64=(
-    ["archive_url"]="https://musl.cc/aarch64-linux-musl-cross.tgz"
+    #["archive_url"]="https://musl.cc/aarch64-linux-musl-cross.tgz"
+    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/aarch64-linux-musl-cross.tgz"
     ["archive_dir"]="aarch64-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-aarch64"
 )
