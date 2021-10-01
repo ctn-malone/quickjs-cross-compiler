@@ -24,7 +24,7 @@ declare -A cfg_musl_cc_i686=(
 # musl.cc cross-compiler for armv7l target
 declare -A cfg_musl_cc_armv7l=(
     #["archive_url"]="https://musl.cc/armv7l-linux-musleabihf-cross.tgz"
-    ["archive_dir"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/armv7l-linux-musleabihf-cross.tgz"
+    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/armv7l-linux-musleabihf-cross.tgz"
     ["archive_dir"]="armv7l-linux-musleabihf-cross"
     ["archive_dir_symlink"]="musl_cc-armv7l"
 )
