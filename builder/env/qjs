@@ -19,4 +19,4 @@ declare -A qjs_packages=(
 
 # default tag for https://github.com/ctn-malone/qjs-ext-lib
 qjs_ext_lib_repository="https://github.com/ctn-malone/qjs-ext-lib"
-default_qjs_ext_lib_version="0.3.0"
+default_qjs_ext_lib_version="0.3.4"
