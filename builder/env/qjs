@@ -14,9 +14,9 @@ declare -A qjs_commits=(
 declare -A qjs_packages=(
     ["2020-09-06"]="2020-09-06"
     ["2020-11-08"]="2020-11-08_3"
-    ["2021-03-27"]="2021-03-27_2"
+    ["2021-03-27"]="2021-03-27_1"
 )
 
 # default tag for https://github.com/ctn-malone/qjs-ext-lib
 qjs_ext_lib_repository="https://github.com/ctn-malone/qjs-ext-lib"
-default_qjs_ext_lib_version="0.3.4"
+default_qjs_ext_lib_version="0.4.0"

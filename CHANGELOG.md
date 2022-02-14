@@ -1,9 +1,5 @@
 # Change Log
 
-## [2021-03-27_2] **NOT RELEASED*
-
-* Support for `aarch64`
-
 ## [2021-03-27_1]
 
 * QuickJS release `2021-03-27`
