@@ -6,4 +6,4 @@
 #
 ###
 
-apk add build-base xz bash git
+apk add build-base xz bash git curl
