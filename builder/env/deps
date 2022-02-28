@@ -1,38 +1,38 @@
 # musl library
 declare -A cfg_musl_lib=(
-    ["archive_url"]="https://musl.libc.org/releases/musl-1.2.1.tar.gz"
-    ["archive_dir"]="musl-1.2.1"
+    ["archive_url"]="https://musl.libc.org/releases/musl-1.2.2.tar.gz"
+    ["archive_dir"]="musl-1.2.2"
     ["archive_dir_symlink"]="musl"
 )
 
 # musl.cc cross-compiler for x86_64 target
 declare -A cfg_musl_cc_x86_64=(
-    #["archive_url"]="https://musl.cc/x86_64-linux-musl-cross.tgz"
-    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/x86_64-linux-musl-cross.tgz"
+    #["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/x86_64-linux-musl-cross.tgz"
+    ["archive_url"]="https://github.com/ctn-malone/musl-cross-maker/releases/download/gcc-6.5.0_binutils-2.25.1_musl-1.2.2/x86_64-linux-musl-cross.tgz"
     ["archive_dir"]="x86_64-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-x86_64"
 )
 
 # musl.cc cross-compiler for i686 target
 declare -A cfg_musl_cc_i686=(
-    #["archive_url"]="https://musl.cc/i686-linux-musl-cross.tgz"
-    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/i686-linux-musl-cross.tgz"
+    #["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/i686-linux-musl-cross.tgz"
+    ["archive_url"]="https://github.com/ctn-malone/musl-cross-maker/releases/download/gcc-6.5.0_binutils-2.25.1_musl-1.2.2/i686-linux-musl-cross.tgz"
     ["archive_dir"]="i686-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-i686"
 )
 
 # musl.cc cross-compiler for armv7l target
 declare -A cfg_musl_cc_armv7l=(
-    #["archive_url"]="https://musl.cc/armv7l-linux-musleabihf-cross.tgz"
-    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/armv7l-linux-musleabihf-cross.tgz"
+    #["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/armv7l-linux-musleabihf-cross.tgz"
+    ["archive_url"]="https://github.com/ctn-malone/musl-cross-maker/releases/download/gcc-6.5.0_binutils-2.25.1_musl-1.2.2/armv7l-linux-musleabihf-cross.tgz"
     ["archive_dir"]="armv7l-linux-musleabihf-cross"
     ["archive_dir_symlink"]="musl_cc-armv7l"
 )
 
 # musl.cc cross-compiler for aarch64 target
 declare -A cfg_musl_cc_aarch64=(
-    #["archive_url"]="https://musl.cc/aarch64-linux-musl-cross.tgz"
-    ["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/aarch64-linux-musl-cross.tgz"
+    #["archive_url"]="https://more.musl.cc/10.2.1/x86_64-linux-musl/aarch64-linux-musl-cross.tgz"
+    ["archive_url"]="https://github.com/ctn-malone/musl-cross-maker/releases/download/gcc-6.5.0_binutils-2.25.1_musl-1.2.2/aarch64-linux-musl-cross.tgz"
     ["archive_dir"]="aarch64-linux-musl-cross"
     ["archive_dir_symlink"]="musl_cc-aarch64"
 )

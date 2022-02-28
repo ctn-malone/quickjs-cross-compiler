@@ -1,5 +1,5 @@
 diff --git a/quickjs-libc.c b/quickjs-libc.c
-index e180dd0..aa82b3d 100644
+index e180dd0..2556499 100644
 --- a/quickjs-libc.c
 +++ b/quickjs-libc.c
 @@ -71,6 +71,8 @@ typedef sig_t sighandler_t;
@@ -11,7 +11,7 @@ index e180dd0..aa82b3d 100644
  /* TODO:
     - add socket calls
  */
-@@ -577,11 +579,24 @@ JSModuleDef *js_module_loader(JSContext *ctx,
+@@ -577,11 +579,30 @@ JSModuleDef *js_module_loader(JSContext *ctx,
          JSValue func_val;
      
          buf = js_load_file(ctx, &buf_len, module_name);
@@ -23,9 +23,15 @@ index e180dd0..aa82b3d 100644
          }
 +*/
 +        if (!buf) {
-+            // try with a path relative to exe
 +            char path[4096];
-+            get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            // check if a custom lib dir has been defined
++            char* lib_dir = getenv("QJS_LIB_DIR");
++            if (NULL == lib_dir) {
++                get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            }
++            else {
++                get_path_with_dir(path, sizeof(path), lib_dir, (char*)module_name);
++            }
 +            buf = js_load_file(ctx, &buf_len, path);
 +            if (!buf) {
 +                JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
@@ -36,3 +42,25 @@ index e180dd0..aa82b3d 100644
          
          /* compile the module */
          func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
+@@ -3030,6 +3051,13 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
+     goto done;
+ }
+ 
++/* getpid() -> pid */
++static JSValue js_os_getpid(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    return JS_NewInt32(ctx, getpid());
++}
++
+ /* waitpid(pid, block) -> [pid, status] */
+ static JSValue js_os_waitpid(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+@@ -3650,6 +3678,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+     JS_CFUNC_DEF("symlink", 2, js_os_symlink ),
+     JS_CFUNC_DEF("readlink", 1, js_os_readlink ),
+     JS_CFUNC_DEF("exec", 1, js_os_exec ),
++    JS_CFUNC_DEF("getpid", 0, js_os_getpid ),
+     JS_CFUNC_DEF("waitpid", 2, js_os_waitpid ),
+     OS_FLAG(WNOHANG),
+     JS_CFUNC_DEF("pipe", 0, js_os_pipe ),

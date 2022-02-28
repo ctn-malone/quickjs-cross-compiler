@@ -1,5 +1,16 @@
 # Change Log
 
+## [2021-03-27_2]
+
+* refactor: built [using](https://github.com/ctn-malone/musl-cross-maker/releases/tag/gcc-6.5.0_binutils-2.25.1_musl-1.2.2)
+  * gcc : 6.5.0
+  * binutils : 2.25.1
+  * musl : 1.2.2
+* feat: QuickJS binaries are compressed using [upx](https://upx.github.io/) by default
+* feat: compiled files are compressed using [upx](https://upx.github.io/) by default (if possible)
+* feat: support for `QJS_LIB_DIR` environment variable
+* feat: expose `getpid` function to javascript
+
 ## [2021-03-27_1]
 
 * QuickJS release `2021-03-27`

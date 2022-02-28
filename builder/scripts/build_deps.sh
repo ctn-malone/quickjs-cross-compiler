@@ -159,7 +159,7 @@ source "${script_dir}/../env/deps"
 # build 'musl lib'
 build_musl_lib()
 {
-    [ $_arg_verbose == "on" ] && echo "Building 'musl lib' for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Building 'musl lib' for '${_arg_arch}'..."
 
     declare -n _cfg="cfg_musl_lib"
 
@@ -188,9 +188,9 @@ build_musl_lib()
     fi
 
     # already built
-    if [ -f ${_built_marker} ] && [ $_arg_force == "off" ]
+    if [ -f ${_built_marker} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to build 'musl lib' for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "No need to build 'musl lib' for '${_arg_arch}'"
     else
         # build
         (rm -f ${_built_marker} && \
@@ -203,7 +203,7 @@ build_musl_lib()
                 --exec-prefix=/ \
                 --enable-wrapper=no && \
             DESTDIR=${_build_dir} make install) || return 1
-        [ $_arg_verbose == "on" ] && echo "Successfully built 'musl lib' for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully built 'musl lib' for '${_arg_arch}'"
     fi
 
     # copy script & specs
@@ -230,17 +230,17 @@ build_musl_lib()
 # build all dependencies
 build_deps()
 {
-    [ $_arg_verbose == "on" ] && echo "Building dependencies for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Building dependencies for '${_arg_arch}'..."
 
     build_musl_lib || return 1
 
-    [ $_arg_verbose == "on" ] && echo "Dependencies for '${_arg_arch}' successfully built"
+    [ ${_arg_verbose} == "on" ] && echo "Dependencies for '${_arg_arch}' successfully built"
 
     return 0
 }
 
 _PRINT_HELP=no
-deps_dir=$_arg_deps_dir
+deps_dir=${_arg_deps_dir}
 custom_dir="${script_dir}/../custom"
 
 build_deps || die "Could not build dependencies for '${_arg_arch}'"

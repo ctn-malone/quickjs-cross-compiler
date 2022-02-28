@@ -4,7 +4,7 @@
 #
 # Fetch dependencies
 # - download musl sources
-# - download musl-based cross compiler (see https://musl.cc/)
+# - download musl-based cross compiler (see https://github.com/ctn-malone/musl-cross-maker)
 # - create symlinks under the root directory ofr musl-cc compiler to maje compilation process easier
 #
 ###
@@ -156,7 +156,7 @@ source "${script_dir}/../env/deps"
 # Fetch 'musl-cc' tarball, decompress & create symlink under ${deps_dir}
 fetch_musl_cc()
 {
-    [ $_arg_verbose == "on" ] && echo "Downloading 'musl-cc' for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Downloading 'musl-cc' for '${_arg_arch}'..."
 
     case ${_arg_arch} in
         x86_64)
@@ -188,15 +188,15 @@ fetch_musl_cc()
     _libssp_nonshared_symlink=${_archive_dir}/libssp_nonshared.a
 
     # dependency already fetched & decompressed
-    if [ -d ${_archive_dir} ] && [ $_arg_force == "off" ]
+    if [ -d ${_archive_dir} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to download 'musl-cc' for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "No need to download 'musl-cc' for '${_arg_arch}'"
     else
         # fetch tarball & decompress
         (rm -fr ${_archive_dir} && \
             wget -O ${_archive} ${_cfg["archive_url"]} && \
             tar -C ${archives_dir} -xzf ${_archive}) || return 1
-        [ $_arg_verbose == "on" ] && echo "Successfully downloaded 'musl-cc' for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully downloaded 'musl-cc' for '${_arg_arch}'"
     fi
 
     # create symlink to archive directory
@@ -225,7 +225,7 @@ fetch_musl_cc()
 # Fetch 'musl lib' tarball, decompress & create symlink under ${deps_dir}
 fetch_musl_lib()
 {
-    [ $_arg_verbose == "on" ] && echo "Downloading 'musl lib'..."
+    [ ${_arg_verbose} == "on" ] && echo "Downloading 'musl lib'..."
 
     declare -n _cfg="cfg_musl_lib"
 
@@ -237,15 +237,15 @@ fetch_musl_lib()
     _archive_dir_symlink=${deps_dir}/${_cfg["archive_dir_symlink"]}
 
     # dependency already fetched & decompressed
-    if [ -d ${_archive_dir} ] && [ $_arg_force == "off" ]
+    if [ -d ${_archive_dir} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to download 'musl lib'"
+        [ ${_arg_verbose} == "on" ] && echo "No need to download 'musl lib'"
     else
         # fetch tarball & decompress
         (rm -fr ${_archive_dir} && \
             wget -O ${_archive} ${_cfg["archive_url"]} && \
             tar -C ${archives_dir} -xzf ${_archive}) || return 1
-        [ $_arg_verbose == "on" ] && echo "Successfully downloaded 'musl lib'"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully downloaded 'musl lib'"
     fi
 
     # create symlink to archive directory
@@ -258,18 +258,18 @@ fetch_musl_lib()
 # fetch all dependencies
 fetch_deps()
 {
-    [ $_arg_verbose == "on" ] && echo "Fetching dependencies for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Fetching dependencies for '${_arg_arch}'..."
 
     fetch_musl_lib || return 1
     fetch_musl_cc || return 1
 
-    [ $_arg_verbose == "on" ] && echo "Dependencies for '${_arg_arch}' successfully fetched"
+    [ ${_arg_verbose} == "on" ] && echo "Dependencies for '${_arg_arch}' successfully fetched"
 
     return 0
 }
 
 _PRINT_HELP=no
-deps_dir=$_arg_deps_dir
+deps_dir=${_arg_deps_dir}
 # directory where archives will be downloaded
 archives_dir=${deps_dir}/archives
 

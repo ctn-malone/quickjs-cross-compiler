@@ -4,6 +4,7 @@
 #
 # Export a portable package which can be used to generate static binaries
 # - strip binaries & static libraries
+# - compress binaries using upx
 # - add extra directories (optional)
 # - generate an archive compressed with xz
 #
@@ -16,6 +17,7 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_SINGLE([deps-dir],[d],[directory containing dependencies],[$script_dir/../../deps])
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../../packages])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
+# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[on])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
 # ARG_OPTIONAL_BOOLEAN([ext-lib],[],[add QuickJS extension library],[off])
 # ARG_OPTIONAL_SINGLE([ext-lib-version],[],[QuickJS extension library version],[$default_qjs_ext_lib_version])
@@ -53,7 +55,7 @@ arch()
 
 begins_with_short_option()
 {
-	local first_option all_short_options='dpvaeh'
+	local first_option all_short_options='dpvuaeh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -65,6 +67,7 @@ _arg_qjs_version="$default_qjs_version"
 _arg_deps_dir="$script_dir/../../deps"
 _arg_packages_dir="$script_dir/../../packages"
 _arg_verbose="off"
+_arg_upx="on"
 _arg_arch="x86_64"
 _arg_ext_lib="off"
 _arg_ext_lib_version="$default_qjs_ext_lib_version"
@@ -74,11 +77,12 @@ _arg_extra_dir=()
 print_help()
 {
 	printf '%s\n' "Export a tarball containing a static version of QuickJS and a static version of musl library"
-	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-d|--deps-dir <arg>] [-p|--packages-dir <arg>] [-v|--(no-)verbose] [-u|--(no-)upx] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../../packages')"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
+	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (on by default)"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')"
 	printf '\t%s\n' "--ext-lib, --no-ext-lib: add QuickJS extension library (off by default)"
 	printf '\t%s\n' "--ext-lib-version: QuickJS extension library version (default: '$default_qjs_ext_lib_version')"
@@ -126,6 +130,18 @@ parse_commandline()
 				if test -n "$_next" -a "$_next" != "$_key"
 				then
 					{ begins_with_short_option "$_next" && shift && set -- "-v" "-${_next}" "$@"; } || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
+				fi
+				;;
+			-u|--no-upx|--upx)
+				_arg_upx="on"
+				test "${1:0:5}" = "--no-" && _arg_upx="off"
+				;;
+			-u*)
+				_arg_upx="on"
+				_next="${_key##-u}"
+				if test -n "$_next" -a "$_next" != "$_key"
+				then
+					{ begins_with_short_option "$_next" && shift && set -- "-u" "-${_next}" "$@"; } || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
 				fi
 				;;
 			-a|--arch)
@@ -216,21 +232,21 @@ assign_positional_args 1 "${_positionals[@]}"
 # vvv  PLACE YOUR CODE HERE  vvv
 
 # ensure version exists
-qjs_commit="${qjs_commits[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[${_arg_qjs_version}]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported (commit unknown)"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported (commit unknown)"
 fi
 
 # ensure package name exists
-qjs_package="${qjs_packages[$_arg_qjs_version]}"
+qjs_package="${qjs_packages[${_arg_qjs_version}]}"
 if [ -z ${qjs_package} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported (package unknown)"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported (package unknown)"
 fi
 
 package_type=core
-if ! [ -z $_arg_extra_dir ] || [ $_arg_ext_lib == "on" ]
+if ! [ -z ${_arg_extra_dir} ] || [ ${_arg_ext_lib} == "on" ]
 then
     # we have been given directories to add to package
     package_type=ext
@@ -239,7 +255,7 @@ fi
 # export QuickJS
 export_qjs()
 {
-    [ $_arg_verbose == "on" ] && echo "Exporting 'QuickJS' version '${_arg_qjs_version}' (${package_type}) for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Exporting 'QuickJS' version '${_arg_qjs_version}' (${package_type}) for '${_arg_arch}'..."
 
     if ! [ -d ${repo_dir} ]
     then
@@ -270,9 +286,9 @@ export_qjs()
     # name of the package which will be exported
     _package_name="quickjs.${package_type}.${qjs_package}.${_arg_arch}"
     # add qjs ext lib to the name if it has been added
-    if [ $_arg_ext_lib == "on" ]
+    if [ ${_arg_ext_lib} == "on" ]
     then
-        _package_name="quickjs.${package_type}.${qjs_package}.ext-lib-$_arg_ext_lib_version.${_arg_arch}"
+        _package_name="quickjs.${package_type}.${qjs_package}.ext-lib-${_arg_ext_lib_version}.${_arg_arch}"
     fi
     # directory where package will be exported
     _package_dir="${packages_dir}/${_package_name}"
@@ -286,6 +302,8 @@ export_qjs()
     _qjs_export_list="bin/qjs bin/qjsc lib/quickjs/libquickjs.a include/quickjs/quickjs-libc.h include/quickjs/quickjs.h"
     # list of QuickJS files which need to be stripped
     _qjs_strip_list="qjs qjsc libquickjs.a"
+    # list of QuickJS files which need to be compressed using upx
+    _qjs_upx_list="qjs qjsc"
     # list of qjs examples/tests files to copy
     _qjs_examples="examples/fib_module.js examples/hello.js examples/hello_module.js examples/pi_bigdecimal.js examples/pi_bigfloat.js examples/pi_bigint.js tests/microbench.js"
     # use 'strip' binary from cross compiler
@@ -316,6 +334,35 @@ export_qjs()
         fi
     done
 
+	if [ ${_arg_upx} == "on" ]
+	then
+		_upx_binary=$(which upx)
+		if [ -z ${_upx_binary} ]
+		then
+			if [ ${_arg_verbose} == "on" ]
+			then
+				echo "Skipping 'QuickJS' binaries compression since 'upx' is not installed"
+			fi
+		else
+			[ ${_arg_verbose} == "on" ] && echo "Compressing 'QuickJS' binaries..."
+			for _e in ${_qjs_upx_list}
+			do
+			    _file="${_package_dir}/${_e}"
+				${_upx_binary} ${_file}
+				_result=$?
+				if [ ${_result} -ne 0 ]
+				then
+					# don't do anything if binary is already compressed
+					if [ ${_result} -ne 2 ]
+					then
+	        			echo "Could not compress 'QuickJS' binary '${_e}'" 1>&2
+	        			return 1
+					fi
+				fi
+			done
+		fi
+	fi
+
     # copy musl directory
     cp -RL ${_musl_dir_symlink} ${_package_dir} || return 1
 
@@ -329,7 +376,7 @@ export_qjs()
     done
 
     # copy ext lib
-    if [ $_arg_ext_lib == "on" ]
+    if [ ${_arg_ext_lib} == "on" ]
     then
         _ext_lib_tmp_dir=${_package_dir}/.ext_lib
         rm -fr ${_ext_lib_tmp_dir} && \
@@ -377,7 +424,7 @@ export_qjs()
     cp -R ${custom_dir}/qjs/scripts/* ${_package_dir} || return 1
 
     # copy ext lib examples
-    if [ $_arg_ext_lib == "on" ]
+    if [ ${_arg_ext_lib} == "on" ]
     then
         cp -R ${custom_dir}/qjs/examples/ext-lib ${_package_dir}/examples || return 1
     fi
@@ -388,9 +435,10 @@ export_qjs()
     # compress directory
     (cd ${packages_dir} &&
         tar -C ${packages_dir} -cJf ${_package_tarball_filename} ${_package_name} && \
+            chmod 666 ${_package_tarball_filename} && \
         rm -fr ${_package_dir}) || return 1
 
-    [ $_arg_verbose == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' (${package_type}) successfully exported for '${_arg_arch}' to '${_arg_packages_dir}/${_package_tarball_filename}'"
+    [ ${_arg_verbose} == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' (${package_type}) successfully exported for '${_arg_arch}' to '${_package_tarball}'"
 
     return 0
 }
@@ -405,8 +453,8 @@ done
 
 _PRINT_HELP=no
 repo_dir="${script_dir}/../../quickjs-repo"
-deps_dir=$_arg_deps_dir
-packages_dir=$_arg_packages_dir
+deps_dir=${_arg_deps_dir}
+packages_dir=${_arg_packages_dir}
 custom_dir="${script_dir}/../custom"
 
 mkdir -p ${packages_dir}

@@ -22,6 +22,7 @@ source "${script_dir}/env/qjs"
 # ARG_OPTIONAL_BOOLEAN([force-checkout-qjs],[],[clone repository even if it exists],[off])
 # ARG_OPTIONAL_BOOLEAN([force-build-qjs],[],[force rebuild of QuickJS],[off])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
+# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[on])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
 # ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l,aarch64])
 # ARG_HELP([Build a static version of QuickJS (interpreter & compiler)])
@@ -55,7 +56,7 @@ arch()
 
 begins_with_short_option()
 {
-	local first_option all_short_options='paevh'
+	local first_option all_short_options='paevuh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -75,12 +76,13 @@ _arg_force_build_deps="off"
 _arg_force_checkout_qjs="off"
 _arg_force_build_qjs="off"
 _arg_verbose="off"
+_arg_upx="on"
 
 
 print_help()
 {
 	printf '%s\n' "Build a static version of QuickJS (interpreter & compiler)"
-	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]\n' "$0"
+	printf 'Usage: %s [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]\n' "$0"
 	printf '\t%s\n' "<qjs-version>: QuickJS version (ex: 2020-09-06) (default: '$default_qjs_version')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../packages')"
 	printf '\t%s\n' "--deps-dir: directory where dependencies should be stored/buil (default: '$script_dir/../deps')"
@@ -93,6 +95,7 @@ print_help()
 	printf '\t%s\n' "--force-checkout-qjs, --no-force-checkout-qjs: clone repository even if it exists (off by default)"
 	printf '\t%s\n' "--force-build-qjs, --no-force-build-qjs: force rebuild of QuickJS (off by default)"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
+	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (on by default)"
 	printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -185,6 +188,18 @@ parse_commandline()
 					{ begins_with_short_option "$_next" && shift && set -- "-v" "-${_next}" "$@"; } || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
 				fi
 				;;
+			-u|--no-upx|--upx)
+				_arg_upx="on"
+				test "${1:0:5}" = "--no-" && _arg_upx="off"
+				;;
+			-u*)
+				_arg_upx="on"
+				_next="${_key##-u}"
+				if test -n "$_next" -a "$_next" != "$_key"
+				then
+					{ begins_with_short_option "$_next" && shift && set -- "-u" "-${_next}" "$@"; } || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
+				fi
+				;;
 			-h|--help)
 				print_help
 				exit 0
@@ -241,10 +256,10 @@ assign_positional_args 1 "${_positionals[@]}"
 source "${script_dir}/env/qjs"
 
 # ensure version exist
-qjs_commit="${qjs_commits[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[${_arg_qjs_version}]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported"
 fi
 
 _PRINT_HELP=no
@@ -252,15 +267,15 @@ _PRINT_HELP=no
 build_qjs()
 {
     _flag_verbose=""
-    [ $_arg_verbose == "on" ] && _flag_verbose="-v"
+    [ ${_arg_verbose} == "on" ] && _flag_verbose="-v"
     _flag_force_fetch_deps=""
-    [ $_arg_force_fetch_deps == "on" ] && _flag_force_fetch_deps="-f"
+    [ ${_arg_force_fetch_deps} == "on" ] && _flag_force_fetch_deps="-f"
     _flag_force_build_deps=""
-    [ $_arg_force_build_deps == "on" ] && _flag_force_build_deps="-f"
+    [ ${_arg_force_build_deps} == "on" ] && _flag_force_build_deps="-f"
     _flag_force_checkout_qjs=""
-    [ $_arg_force_checkout_qjs == "on" ] && _flag_force_checkout_qjs="-f"
+    [ ${_arg_force_checkout_qjs} == "on" ] && _flag_force_checkout_qjs="-f"
     _flag_force_build_qjs=""
-    [ $_arg_force_build_qjs == "on" ] && _flag_force_build_qjs="-f"
+    [ ${_arg_force_build_qjs} == "on" ] && _flag_force_build_qjs="-f"
 
     ${script_dir}/scripts/fetch_deps.sh ${_flag_verbose} -d ${_arg_deps_dir} -a ${_arg_arch} ${_flag_force_fetch_deps} || return 1
     ${script_dir}/scripts/build_deps.sh ${_flag_verbose} -d ${_arg_deps_dir} -a ${_arg_arch} ${_flag_force_build_deps} || return 1
@@ -273,19 +288,22 @@ build_qjs()
 
 build_qjs || exit 1
 args_qjs_ext_lib=""
-if [ $_arg_ext_lib == "on" ]
+if [ ${_arg_ext_lib} == "on" ]
 then
-    args_qjs_ext_lib="--ext-lib --ext-lib-version $_arg_ext_lib_version"
+    args_qjs_ext_lib="--ext-lib --ext-lib-version ${_arg_ext_lib_version}"
 fi
 args_extra_dir=""
 for a in ${_arg_extra_dir[@]}
 do
     args_extra_dir="${args_extra_dir} -e ${a}"
 done
-echo "${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir}"
-${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} || exit 1
+_flag_disable_upx=""
+[ ${_arg_upx} == "off" ] && _flag_disable_upx="--no-upx"
 
-echo "Successfully built & exported 'QuickJS' version '$_arg_qjs_version' for '${_arg_arch}'"
+#echo "${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} ${_flag_disable_upx}"
+${script_dir}/scripts/export_qjs.sh ${_arg_qjs_version} ${_flag_verbose} -d ${_arg_deps_dir} -p ${_arg_packages_dir} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} ${_flag_disable_upx} || exit 1
+
+echo "Successfully built & exported 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'"
 
 # ^^^  TERMINATE YOUR CODE BEFORE THE BOTTOM ARGBASH MARKER  ^^^
 

@@ -11,5 +11,14 @@
 #
 ###
 
+# if variable is not defined yet, check if upx is available
+if [ -z ${QJS_UPX} ]
+then
+    upx=$(which upx)
+    if ! [ -z ${upx} ]
+    then
+        QJS_UPX=1
+    fi
+fi
 script_dir="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-${script_dir}/qjsc "$@"
+QJS_UPX=${QJS_UPX} ${script_dir}/qjsc "$@"

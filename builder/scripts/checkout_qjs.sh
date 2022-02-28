@@ -139,26 +139,26 @@ assign_positional_args 1 "${_positionals[@]}"
 # vvv  PLACE YOUR CODE HERE  vvv
 
 # ensure version exist
-qjs_commit="${qjs_commits[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[${_arg_qjs_version}]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported"
 fi
 
 # clone QuickJS repo
 clone_repo()
 {
-    [ $_arg_verbose == "on" ] && echo "Cloning 'QuickJS' repository '${qjs_repository}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Cloning 'QuickJS' repository '${qjs_repository}'..."
 
     # no need to clone repository
-    if [ -d ${repo_dir} ] && [ $_arg_force == "off" ]
+    if [ -d ${repo_dir} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to clone 'QuickJS' repository '${qjs_repository}'"
+        [ ${_arg_verbose} == "on" ] && echo "No need to clone 'QuickJS' repository '${qjs_repository}'"
     else
         (rm -fr ${repo_dir} && \
             cd ${script_dir}/.. &&
             git clone ${qjs_repository} ${repo_dir}) || return 1
-        [ $_arg_verbose == "on" ] && echo "Successfully cloned 'QuickJS' repository '$qjs_repository'"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully cloned 'QuickJS' repository '$qjs_repository'"
     fi
 
     return 0
@@ -167,12 +167,12 @@ clone_repo()
 # Checkout a specific commit corresponding to the requested version
 checkout_commit()
 {
-    [ $_arg_verbose == "on" ] && echo "Checking out 'QuickJS' commit '${qjs_commits[$_arg_qjs_version]}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Checking out 'QuickJS' commit '${qjs_commits[${_arg_qjs_version}]}'..."
 
     (cd ${repo_dir} &&
-        git checkout ${qjs_commits[$_arg_qjs_version]}) || return 1
+        git checkout ${qjs_commits[${_arg_qjs_version}]}) || return 1
 
-    [ $_arg_verbose == "on" ] && echo "Successfully checked out 'QuickJS' commit '${qjs_commits[$_arg_qjs_version]}'"
+    [ ${_arg_verbose} == "on" ] && echo "Successfully checked out 'QuickJS' commit '${qjs_commits[${_arg_qjs_version}]}'"
 
     return 0
 }

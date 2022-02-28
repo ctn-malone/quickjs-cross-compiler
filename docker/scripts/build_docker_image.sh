@@ -145,15 +145,15 @@ build_image()
     _image_name="quickjs-cross-compiler:${_arg_arch}"
     _image=$(docker images --format "{{.ID}}" --filter=reference="${_image_name}" | head -1)
 
-    [ $_arg_verbose == "on" ] && echo "Building docker image for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Building docker image for '${_arg_arch}'..."
 
     # no need to build image
-    if ! [ -z ${_image} ] && [ $_arg_force == "off" ]
+    if ! [ -z ${_image} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to build docker image for '${_arg_arch}'..."
+        [ ${_arg_verbose} == "on" ] && echo "No need to build docker image for '${_arg_arch}'..."
     else
         docker build --build-arg arch=${_arg_arch} --no-cache --force-rm=true --rm=true -f ${script_dir}/../Dockerfile -t ${_image_name} ${script_dir}/../.. || return 1
-        [ $_arg_verbose == "on" ] && echo "Successfully built docker image for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully built docker image for '${_arg_arch}'"
     fi
 
     return 0

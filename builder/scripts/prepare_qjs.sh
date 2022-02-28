@@ -170,16 +170,16 @@ assign_positional_args 1 "${_positionals[@]}"
 # vvv  PLACE YOUR CODE HERE  vvv
 
 # ensure version exist
-qjs_commit="${qjs_commits[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[${_arg_qjs_version}]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported"
 fi
 
 # patch QuickJS source files
 patch_qjs()
 {
-    [ $_arg_verbose == "on" ] && echo "Patching 'QuickJS' sources..."
+    [ ${_arg_verbose} == "on" ] && echo "Patching 'QuickJS' sources..."
 
     # ensure repository exists
     if ! [ -d ${repo_dir} ]
@@ -197,7 +197,7 @@ patch_qjs()
         return 1
     fi
 
-    _patch_dir="${custom_dir}/qjs/patches/$_arg_qjs_version"
+    _patch_dir="${custom_dir}/qjs/patches/${_arg_qjs_version}"
     _need_patch=0
     # used to keep track of whether or not repo was patched
     _patched_marker="${repo_dir}/.patched-${_arg_qjs_version}"
@@ -223,9 +223,9 @@ patch_qjs()
 
     if [ ${_need_patch} -eq 0 ]
     then
-        [ $_arg_verbose == "on" ] && echo "'QuickJS' sources already patched"
+        [ ${_arg_verbose} == "on" ] && echo "'QuickJS' sources already patched"
     else
-        [ $_arg_verbose == "on" ] && echo "Successfully patched 'QuickJS' sources"
+        [ ${_arg_verbose} == "on" ] && echo "Successfully patched 'QuickJS' sources"
     fi
 
     return 0
@@ -234,7 +234,7 @@ patch_qjs()
 # create symlink to static musl lib
 create_musl_symlink()
 {
-    [ $_arg_verbose == "on" ] && echo "Creating symlink to 'musl lib' for '${_arg_arch}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Creating symlink to 'musl lib' for '${_arg_arch}'..."
 
     # used to keep track of whether or not musl lib was built
     _musl_built_marker="${deps_dir}/musl/.built-${_arg_arch}"
@@ -253,13 +253,13 @@ create_musl_symlink()
     (rm -f ${_musl_dir_symlink} && \
         ln -s ${_musl_dir} ${_musl_dir_symlink}) || return 1
 
-    [ $_arg_verbose == "on" ] && echo "Successfully created symlink to 'musl lib' for '${_arg_arch}'"
+    [ ${_arg_verbose} == "on" ] && echo "Successfully created symlink to 'musl lib' for '${_arg_arch}'"
 
     return 0
 }
 
 _PRINT_HELP=no
-deps_dir=$_arg_deps_dir
+deps_dir=${_arg_deps_dir}
 repo_dir="${script_dir}/../../quickjs-repo"
 # directory containing custom files such as patches to apply
 custom_dir="${script_dir}/../custom"

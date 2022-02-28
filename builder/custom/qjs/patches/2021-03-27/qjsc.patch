@@ -1,5 +1,5 @@
 diff --git a/qjsc.c b/qjsc.c
-index b9f1e4c..3734f50 100644
+index b9f1e4c..d5bfa3e 100644
 --- a/qjsc.c
 +++ b/qjsc.c
 @@ -36,6 +36,8 @@
@@ -11,7 +11,7 @@ index b9f1e4c..3734f50 100644
  typedef struct {
      char *name;
      char *short_name;
-@@ -255,12 +257,25 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
+@@ -255,12 +257,31 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
          char cname[1024];
          
          buf = js_load_file(ctx, &buf_len, module_name);
@@ -22,11 +22,17 @@ index b9f1e4c..3734f50 100644
              return NULL;
          }
 -        
-+*/        
++*/
 +        if (!buf) {
-+            // try with a path relative to qjsc exe
 +            char path[4096];
-+            get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            // check if a custom lib dir has been defined
++            char* lib_dir = getenv("QJS_LIB_DIR");
++            if (NULL == lib_dir) {
++                get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            }
++            else {
++                get_path_with_dir(path, sizeof(path), lib_dir, (char*)module_name);
++            }
 +            buf = js_load_file(ctx, &buf_len, path);
 +            if (!buf) {
 +                JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
@@ -38,7 +44,7 @@ index b9f1e4c..3734f50 100644
          /* compile the module */
          func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
                             JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
-@@ -370,6 +385,13 @@ void help(void)
+@@ -370,6 +391,13 @@ void help(void)
          printf("]\n"
                 "            disable selected language features (smaller code size)\n");
      }
@@ -52,7 +58,7 @@ index b9f1e4c..3734f50 100644
  #endif
      exit(1);
  }
-@@ -401,6 +423,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+@@ -401,6 +429,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
      const char **arg, *bn_suffix, *lto_suffix;
      char libjsname[1024];
      char exe_dir[1024], inc_dir[1024], lib_dir[1024], buf[1024], *p;
@@ -61,7 +67,7 @@ index b9f1e4c..3734f50 100644
      int ret;
      
      /* get the directory of the executable */
-@@ -427,8 +451,15 @@ static int output_executable(const char *out_filename, const char *cfilename,
+@@ -427,8 +457,15 @@ static int output_executable(const char *out_filename, const char *cfilename,
      bn_suffix = "";
      
      arg = argv;
@@ -78,7 +84,7 @@ index b9f1e4c..3734f50 100644
  #ifdef CONFIG_LTO
      if (use_lto) {
          *arg++ = "-flto";
-@@ -452,6 +483,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+@@ -452,6 +489,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
      *arg++ = "-lm";
      *arg++ = "-ldl";
      *arg++ = "-lpthread";
@@ -87,7 +93,30 @@ index b9f1e4c..3734f50 100644
      *arg = NULL;
      
      if (verbose) {
-@@ -513,6 +546,8 @@ int main(int argc, char **argv)
+@@ -462,6 +501,22 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     
+     ret = exec_cmd((char **)argv);
+     unlink(cfilename);
++
++    //-- compress executable using upx
++    p = getenv("QJS_UPX");
++    if (NULL != p && 0 == strcmp(p, "1")) {
++        arg = argv;
++        *arg++ = "upx";
++        *arg++ = out_filename;
++        *arg = NULL;
++        if (verbose) {
++            for(arg = argv; *arg != NULL; arg++)
++                printf("%s ", *arg);
++            printf("\n");
++        }
++        exec_cmd((char **)argv);
++    }
++
+     return ret;
+ }
+ #else
+@@ -513,6 +568,8 @@ int main(int argc, char **argv)
      namelist_add(&cmodule_list, "std", "std", 0);
      namelist_add(&cmodule_list, "os", "os", 0);
  

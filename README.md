@@ -7,17 +7,19 @@ Following target architectures are supported
 * armv7l
 * aarch64
 
-Cross compilation is performed using [musl.cc](https://musl.cc/) static compilers (which means you should be able to generate a portable package of *QuickJS* from any recent *x86_64* Linux distribution with *gcc*)
+Cross compilation is performed using [musl.cc](https://github.com/ctn-malone/musl-cross-maker) static compilers (which means you should be able to generate a portable package of *QuickJS* from any recent *x86_64* Linux distribution with *gcc*)
 
 Final portable version should weight around 7MB (after decompression)
 
-Static compiler should work with any Linux distribution with *gcc* >= `4.3.2` and *binutils* >= `2.26`
+Static compiler should work with any Linux distribution with *gcc* >= `4.3.2` and *binutils* >= `2.25`
+
+By default, packages will be exported to `packages` directory, at the root of the repository
 
 **Table of content**
-- [Generate a portable package without using Docker](#generate-a-portable-package-without-using-docker)
-- [Generate a portable package using Docker](#generate-a-portable-package-using-docker)
+- [Generate a portable package using *Docker*](#generate-a-portable-package-using-docker)
+- [Generate a portable package without using *Docker*](#generate-a-portable-package-without-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
-- [Embed custom javascript modules](#embed-cutom-javascript-modules)
+- [Embed custom javascript modules](#embed-custom-javascript-modules)
 - [Embed QuickJS extension library](#embed-quickjs-extension-library)
 - [Limitations](#limitations)
 
@@ -30,15 +32,16 @@ A portable package containing interpreter & compiler can be generated using `doc
 ```
 ./docker/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2021-03-27')
         -p, --packages-dir: directory where package will be exported (default: './packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.3.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.4.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
+        -u, --upx, --no-upx: compress binaries using upx (on by default)
         -h, --help: Prints help
 ```
 
@@ -69,19 +72,20 @@ A portable package containing interpreter & compiler can be generated using `bui
 ```
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-h|--help] [<qjs-version>]
+Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2021-03-27')
         -p, --packages-dir: directory where package will be exported (default: './packages')
         --deps-dir: directory where dependencies should be stored/buil (default: './deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.3.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.4.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
         --force-checkout-qjs, --no-force-checkout-qjs: clone repository even if it exists (off by default)
         --force-build-qjs, --no-force-build-qjs: force rebuild of QuickJS (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
+        -u, --upx, --no-upx: compress binaries using upx (on by default)
         -h, --help: Prints help
 ```
 
@@ -154,6 +158,8 @@ ldd hello
         not a dynamic executable
 ```
 
+<u>NB</u> : if [upx](https://upx.github.io/) exists, resulting binary will be automatically compressed (unless `QJS_UPX` environment variable is set to `0`)
+
 # Embed custom javascript modules
 
 Starting from release `2020-11-08_2`, any javascript file placed alongside `qjs` & `qjsc` binaries can be referenced relatively from your main script.
@@ -208,7 +214,7 @@ sayHello('John Doe');
 sayWeekday();
 ```
 
-Both interpreter & compiler will first try to resolve import relatively to current directory and fallback to the directory containing `qjs` & `qjsc` binaries
+Both interpreter & compiler will first try to resolve import relatively to current directory and fallback to the directory containing `qjs` & `qjsc` binaries (or the directory defined using `QJS_LIB_DIR` environment variable)
 
 <u>NB</u> : fallback will only work when calling `qjs` & `qjsc` using their **absolute path** or through their corresponding **`sh` wrappers**
 

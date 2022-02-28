@@ -185,16 +185,16 @@ assign_positional_args 1 "${_positionals[@]}"
 source "${script_dir}/../env/qjs"
 
 # ensure version exist
-qjs_commit="${qjs_commits[$_arg_qjs_version]}"
+qjs_commit="${qjs_commits[${_arg_qjs_version}]}"
 if [ -z ${qjs_commit} ]
 then
-    _PRINT_HELP=yes die "QuickJS version '$_arg_qjs_version' is not supported"
+    _PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported"
 fi
 
 # build QuickJS
 build_qjs()
 {
-    [ $_arg_verbose == "on" ] && echo "Building 'QuickJS' version '${_arg_qjs_version}'..."
+    [ ${_arg_verbose} == "on" ] && echo "Building 'QuickJS' version '${_arg_qjs_version}'..."
 
     # compiler binary
     _cc="${deps_dir}/musl_cc-${_arg_arch}/cc"
@@ -260,9 +260,9 @@ build_qjs()
     fi
 
     # QuickJS was already built
-    if [ -f ${_built_marker} ] && [ $_arg_force == "off" ]
+    if [ -f ${_built_marker} ] && [ ${_arg_force} == "off" ]
     then
-        [ $_arg_verbose == "on" ] && echo "No need to build 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "No need to build 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'"
     else
         # build
         (rm -f ${_built_marker} && \
@@ -272,7 +272,7 @@ build_qjs()
             make clean && \
             qjs_cc=${_cc} musl_arch=${_arg_arch} qjsc_binary=${_qjsc_binary} make && \
             DESTDIR=${_build_dir} make install) || return 1
-        [ $_arg_verbose == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' successfully built for '${_arg_arch}'"
+        [ ${_arg_verbose} == "on" ] && echo "'QuickJS' version '${_arg_qjs_version}' successfully built for '${_arg_arch}'"
     fi
 
     # create build marker
@@ -282,7 +282,7 @@ build_qjs()
 }
 
 _PRINT_HELP=no
-deps_dir=$_arg_deps_dir
+deps_dir=${_arg_deps_dir}
 repo_dir="${script_dir}/../../quickjs-repo"
 
 build_qjs || die "Could not build 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'"
