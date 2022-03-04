@@ -1,17 +1,22 @@
 diff --git a/quickjs-libc.c b/quickjs-libc.c
-index e180dd0..2556499 100644
+index e180dd0..72b7ddd 100644
 --- a/quickjs-libc.c
 +++ b/quickjs-libc.c
-@@ -71,6 +71,8 @@ typedef sig_t sighandler_t;
+@@ -71,6 +71,13 @@ typedef sig_t sighandler_t;
  #include "list.h"
  #include "quickjs-libc.h"
  
 +#include "path.h"
 +
++#if !defined(_WIN32) && !defined(__APPLE__)
++// flock
++#include <sys/file.h> 
++#endif /* !_WIN32 && !_APPLE_
++
  /* TODO:
     - add socket calls
  */
-@@ -577,11 +579,30 @@ JSModuleDef *js_module_loader(JSContext *ctx,
+@@ -577,11 +584,30 @@ JSModuleDef *js_module_loader(JSContext *ctx,
          JSValue func_val;
      
          buf = js_load_file(ctx, &buf_len, module_name);
@@ -42,7 +47,21 @@ index e180dd0..2556499 100644
          
          /* compile the module */
          func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
-@@ -3030,6 +3051,13 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
+@@ -1477,6 +1503,13 @@ static const JSCFunctionListEntry js_std_error_props[] = {
+     DEF(EPERM),
+     DEF(EPIPE),
+     DEF(EBADF),
++#if !defined(_WIN32) && !defined(_APPLE_)
++    // flock
++    DEF(EINTR),
++    DEF(ENOLCK),
++    DEF(EWOULDBLOCK)
++#endif /* !_WIN32 && !_APPLE_ */
++
+ #undef DEF
+ };
+ 
+@@ -3030,6 +3063,13 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
      goto done;
  }
  
@@ -56,7 +75,54 @@ index e180dd0..2556499 100644
  /* waitpid(pid, block) -> [pid, status] */
  static JSValue js_os_waitpid(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
-@@ -3650,6 +3678,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+@@ -3118,6 +3158,46 @@ static JSValue js_os_dup2(JSContext *ctx, JSValueConst this_val,
+     return JS_NewInt32(ctx, ret);
+ }
+ 
++#if !defined(_APPLE_)
++
++/* flock(fd, operation) */
++static JSValue js_os_flock(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    int fd, operation, ret;
++    if (JS_ToInt32(ctx, &fd, argv[0]))
++        return JS_EXCEPTION;
++    if (JS_ToInt32(ctx, &operation, argv[1]))
++        return JS_EXCEPTION;
++    ret = js_get_errno(flock(fd, operation));
++    return JS_NewInt32(ctx, ret);        
++}
++
++/* mkstemp(template, outputObj) */
++static JSValue js_os_mkstemp(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    char buffer[PATH_MAX];
++    const char *template;
++    int ret;
++
++    template = JS_ToCString(ctx, argv[0]);
++    if (!template)
++        return JS_EXCEPTION;
++    strncpy(buffer, template, sizeof(buffer));
++    JS_FreeCString(ctx, template);
++    ret = js_get_errno(mkstemp(buffer));
++    // check if we can pass the final filename back
++    if (argc >= 2 && ret > 0) {
++        if (!JS_IsUndefined(argv[1])) {
++            JS_SetPropertyStr(ctx, argv[1], "filename", JS_NewString(ctx, buffer));
++        }
++    }
++    return JS_NewInt32(ctx, ret);        
++}
++
++#endif /* !_APPLE_ */
++
+ #endif /* !_WIN32 */
+ 
+ #ifdef USE_WORKER
+@@ -3650,6 +3730,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
      JS_CFUNC_DEF("symlink", 2, js_os_symlink ),
      JS_CFUNC_DEF("readlink", 1, js_os_readlink ),
      JS_CFUNC_DEF("exec", 1, js_os_exec ),
@@ -64,3 +130,18 @@ index e180dd0..2556499 100644
      JS_CFUNC_DEF("waitpid", 2, js_os_waitpid ),
      OS_FLAG(WNOHANG),
      JS_CFUNC_DEF("pipe", 0, js_os_pipe ),
+@@ -3657,6 +3738,14 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+     JS_CFUNC_DEF("dup", 1, js_os_dup ),
+     JS_CFUNC_DEF("dup2", 2, js_os_dup2 ),
+ #endif
++#if !defined(_WIN32) && !defined(_APPLE_)
++    // flock
++    JS_CFUNC_DEF("flock", 2, js_os_flock ),
++    OS_FLAG(LOCK_EX),
++    OS_FLAG(LOCK_NB),
++    // mkstemp
++    JS_CFUNC_DEF("mkstemp", 1, js_os_mkstemp ),
++#endif
+ };
+ 
+ static int js_os_init(JSContext *ctx, JSModuleDef *m)

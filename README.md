@@ -1,4 +1,4 @@
-Cross compile [QuickJS](https://github.com/bellard/quickjs) interpreter & compiler statically. Resulting [QuickJS](https://github.com/bellard/quickjs) compiler also generates *static* binaries based on [musl libc](https://musl.libc.org/)
+Cross compile [QuickJS](https://bellard.org/quickjs/quickjs.html) interpreter & compiler statically. Resulting [QuickJS](https://github.com/ctn-malone/quickjs-cross-compiler) compiler also generates *static* binaries based on [musl libc](https://musl.libc.org/)
 
 Following target architectures are supported
 
@@ -16,12 +16,59 @@ Static compiler should work with any Linux distribution with *gcc* >= `4.3.2` an
 By default, packages will be exported to `packages` directory, at the root of the repository
 
 **Table of content**
+- [Extra functions](#extra-functions)
+  - [os.getpid](#osgetpid)
+  - [os.flock](#osflock)
+  - [os.mkstemp](#osmkstemp)
 - [Generate a portable package using *Docker*](#generate-a-portable-package-using-docker)
 - [Generate a portable package without using *Docker*](#generate-a-portable-package-without-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
 - [Embed custom javascript modules](#embed-custom-javascript-modules)
 - [Embed QuickJS extension library](#embed-quickjs-extension-library)
 - [Limitations](#limitations)
+
+# Extra functions
+
+Some extra functions not part of [vanilla QuickJS](https://bellard.org/quickjs/quickjs.html) have been added
+
+## os.getpid
+
+`os.getpid()`
+
+<u>Example</u>
+
+```js
+std.puts(os.getpid());
+```
+
+## os.flock
+
+`os.flock(fd, operation)`
+
+See https://linux.die.net/man/2/flock
+
+<u>Example</u>
+
+```
+const fd = os.open('/tmp/lock', os.O_RDWR | os.O_CREAT, 0o644);
+// code will block until no other process is accessing the file
+os.flock(fd, os.LOCK_EX);
+```
+
+## os.mkstemp
+
+`os.mkstemp(template, outputObj)`
+
+See https://man7.org/linux/man-pages/man3/mkstemp.3.html
+
+<u>Example</u>
+
+```
+const outputObj = {};
+// template MUST end with XXXXXX
+const fd = os.mkstemp('/tmp/randomXXXXXX', outputObj);
+std.puts(outputObj.filename)
+```
 
 # Generate a portable package using *Docker*
 

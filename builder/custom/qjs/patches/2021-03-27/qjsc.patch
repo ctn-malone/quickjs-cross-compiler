@@ -1,5 +1,5 @@
 diff --git a/qjsc.c b/qjsc.c
-index b9f1e4c..d5bfa3e 100644
+index b9f1e4c..1150c1e 100644
 --- a/qjsc.c
 +++ b/qjsc.c
 @@ -36,6 +36,8 @@
@@ -93,30 +93,32 @@ index b9f1e4c..d5bfa3e 100644
      *arg = NULL;
      
      if (verbose) {
-@@ -462,6 +501,22 @@ static int output_executable(const char *out_filename, const char *cfilename,
+@@ -462,6 +501,24 @@ static int output_executable(const char *out_filename, const char *cfilename,
      
      ret = exec_cmd((char **)argv);
      unlink(cfilename);
 +
 +    //-- compress executable using upx
-+    p = getenv("QJS_UPX");
-+    if (NULL != p && 0 == strcmp(p, "1")) {
-+        arg = argv;
-+        *arg++ = "upx";
-+        *arg++ = out_filename;
-+        *arg = NULL;
-+        if (verbose) {
-+            for(arg = argv; *arg != NULL; arg++)
-+                printf("%s ", *arg);
-+            printf("\n");
++    if (0 == ret) {
++        p = getenv("QJS_UPX");
++        if (NULL != p && 0 == strcmp(p, "1")) {
++            arg = argv;
++            *arg++ = "upx";
++            *arg++ = out_filename;
++            *arg = NULL;
++            if (verbose) {
++                for(arg = argv; *arg != NULL; arg++)
++                    printf("%s ", *arg);
++                printf("\n");
++            }
++            exec_cmd((char **)argv);
 +        }
-+        exec_cmd((char **)argv);
 +    }
 +
      return ret;
  }
  #else
-@@ -513,6 +568,8 @@ int main(int argc, char **argv)
+@@ -513,6 +570,8 @@ int main(int argc, char **argv)
      namelist_add(&cmodule_list, "std", "std", 0);
      namelist_add(&cmodule_list, "os", "os", 0);
  

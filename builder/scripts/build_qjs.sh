@@ -265,6 +265,7 @@ build_qjs()
         [ ${_arg_verbose} == "on" ] && echo "No need to build 'QuickJS' version '${_arg_qjs_version}' for '${_arg_arch}'"
     else
         # build
+        [ ${_arg_verbose} == "on" ] && echo "qjs_cc=${_cc} musl_arch=${_arg_arch} qjsc_binary=${_qjsc_binary} make"
         (rm -f ${_built_marker} && \
             rm -f ${_commit_marker} && \
             rm -fr ${_build_dir} && \

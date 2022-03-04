@@ -197,6 +197,14 @@ patch_qjs()
         return 1
     fi
 
+	# change VERSION file
+	qjs_package="${qjs_packages[${_arg_qjs_version}]}"
+	if [ -z ${qjs_package} ]
+	then
+    	_PRINT_HELP=yes die "QuickJS version '${_arg_qjs_version}' is not supported (package unknown)"
+	fi
+	echo "${qjs_package}\ \(https://github.com/ctn-malone/quickjs-cross-compiler\)" >${repo_dir}/VERSION
+
     _patch_dir="${custom_dir}/qjs/patches/${_arg_qjs_version}"
     _need_patch=0
     # used to keep track of whether or not repo was patched

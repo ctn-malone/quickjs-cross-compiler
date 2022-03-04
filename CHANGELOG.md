@@ -1,5 +1,11 @@
 # Change Log
 
+## [2021-03-27_3]
+
+* feat: expose `flock` function to javascript
+* feat: expose `mkstemp` function to javascript
+* fix: don't call [upx](https://upx.github.io/) if compilation failed
+
 ## [2021-03-27_2]
 
 * refactor: built [using](https://github.com/ctn-malone/musl-cross-maker/releases/tag/gcc-6.5.0_binutils-2.25.1_musl-1.2.2)
