@@ -1,5 +1,9 @@
 # Change Log
 
+## [2021-03-27_4]
+
+* feat: expose `mkdtemp` function to javascript
+
 ## [2021-03-27_3]
 
 * feat: expose `flock` function to javascript

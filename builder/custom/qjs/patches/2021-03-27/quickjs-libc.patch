@@ -1,5 +1,5 @@
 diff --git a/quickjs-libc.c b/quickjs-libc.c
-index e180dd0..72b7ddd 100644
+index e180dd0..3fcfa79 100644
 --- a/quickjs-libc.c
 +++ b/quickjs-libc.c
 @@ -71,6 +71,13 @@ typedef sig_t sighandler_t;
@@ -10,7 +10,7 @@ index e180dd0..72b7ddd 100644
 +
 +#if !defined(_WIN32) && !defined(__APPLE__)
 +// flock
-+#include <sys/file.h> 
++#include <sys/file.h>
 +#endif /* !_WIN32 && !_APPLE_
 +
  /* TODO:
@@ -75,7 +75,7 @@ index e180dd0..72b7ddd 100644
  /* waitpid(pid, block) -> [pid, status] */
  static JSValue js_os_waitpid(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
-@@ -3118,6 +3158,46 @@ static JSValue js_os_dup2(JSContext *ctx, JSValueConst this_val,
+@@ -3118,6 +3158,73 @@ static JSValue js_os_dup2(JSContext *ctx, JSValueConst this_val,
      return JS_NewInt32(ctx, ret);
  }
  
@@ -91,7 +91,7 @@ index e180dd0..72b7ddd 100644
 +    if (JS_ToInt32(ctx, &operation, argv[1]))
 +        return JS_EXCEPTION;
 +    ret = js_get_errno(flock(fd, operation));
-+    return JS_NewInt32(ctx, ret);        
++    return JS_NewInt32(ctx, ret);
 +}
 +
 +/* mkstemp(template, outputObj) */
@@ -114,7 +114,34 @@ index e180dd0..72b7ddd 100644
 +            JS_SetPropertyStr(ctx, argv[1], "filename", JS_NewString(ctx, buffer));
 +        }
 +    }
-+    return JS_NewInt32(ctx, ret);        
++    return JS_NewInt32(ctx, ret);
++}
++
++/* mkdtemp(template, errorObj) */
++static JSValue js_os_mkdtemp(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    char buffer[PATH_MAX];
++    const char *template;
++    const char *ptr;
++    int err = 0;
++
++    template = JS_ToCString(ctx, argv[0]);
++    if (!template)
++        return JS_EXCEPTION;
++    strncpy(buffer, template, sizeof(buffer));
++    JS_FreeCString(ctx, template);
++    ptr = mkdtemp(buffer);
++    if (NULL == ptr) {
++        err = errno;
++    }
++    if (argc >= 2) {
++        js_set_error_object(ctx, argv[1], err);
++    }
++    if (NULL == ptr) {
++        return JS_NULL;
++    }
++    return JS_NewString(ctx, ptr);
 +}
 +
 +#endif /* !_APPLE_ */
@@ -122,7 +149,7 @@ index e180dd0..72b7ddd 100644
  #endif /* !_WIN32 */
  
  #ifdef USE_WORKER
-@@ -3650,6 +3730,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+@@ -3650,6 +3757,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
      JS_CFUNC_DEF("symlink", 2, js_os_symlink ),
      JS_CFUNC_DEF("readlink", 1, js_os_readlink ),
      JS_CFUNC_DEF("exec", 1, js_os_exec ),
@@ -130,7 +157,7 @@ index e180dd0..72b7ddd 100644
      JS_CFUNC_DEF("waitpid", 2, js_os_waitpid ),
      OS_FLAG(WNOHANG),
      JS_CFUNC_DEF("pipe", 0, js_os_pipe ),
-@@ -3657,6 +3738,14 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+@@ -3657,6 +3765,16 @@ static const JSCFunctionListEntry js_os_funcs[] = {
      JS_CFUNC_DEF("dup", 1, js_os_dup ),
      JS_CFUNC_DEF("dup2", 2, js_os_dup2 ),
  #endif
@@ -141,6 +168,8 @@ index e180dd0..72b7ddd 100644
 +    OS_FLAG(LOCK_NB),
 +    // mkstemp
 +    JS_CFUNC_DEF("mkstemp", 1, js_os_mkstemp ),
++    // mkdtemp
++    JS_CFUNC_DEF("mkdtemp", 1, js_os_mkdtemp ),
 +#endif
  };
  

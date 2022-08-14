@@ -20,6 +20,7 @@ By default, packages will be exported to `packages` directory, at the root of th
   - [os.getpid](#osgetpid)
   - [os.flock](#osflock)
   - [os.mkstemp](#osmkstemp)
+  - [os.mkdtemp](#osmkdtemp)
 - [Generate a portable package using *Docker*](#generate-a-portable-package-using-docker)
 - [Generate a portable package without using *Docker*](#generate-a-portable-package-without-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
@@ -70,6 +71,21 @@ const fd = os.mkstemp('/tmp/randomXXXXXX', outputObj);
 std.puts(outputObj.filename)
 ```
 
+## os.mkdtemp
+
+`os.mkdtemp(template, errObj)`
+
+See https://man7.org/linux/man-pages/man3/mkdtemp.3.html
+
+<u>Example</u>
+
+```
+const errObj = {};
+// template MUST end with XXXXXX
+const dirname = os.mkdtemp('/tmp/randomXXXXXX', errObj);
+std.puts(dirname)
+```
+
 # Generate a portable package using *Docker*
 
 <u>NB</u> : This is the recommended way
@@ -84,7 +100,7 @@ Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <ty
         -p, --packages-dir: directory where package will be exported (default: './packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.4.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.6.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
@@ -125,7 +141,7 @@ Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <
         --deps-dir: directory where dependencies should be stored/buil (default: './deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.4.0')
+        --ext-lib-version: QuickJS extension library version (default: '0.6.0')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
