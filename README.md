@@ -24,6 +24,7 @@ By default, packages will be exported to `packages` directory, at the root of th
 - [Generate a portable package using *Docker*](#generate-a-portable-package-using-docker)
 - [Generate a portable package without using *Docker*](#generate-a-portable-package-without-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
+- [Nix](#nix)
 - [Embed custom javascript modules](#embed-custom-javascript-modules)
 - [Embed QuickJS extension library](#embed-quickjs-extension-library)
 - [Limitations](#limitations)
@@ -222,6 +223,14 @@ ldd hello
 ```
 
 <u>NB</u> : if [upx](https://upx.github.io/) exists, resulting binary will be automatically compressed (unless `QJS_UPX` environment variable is set to `0`)
+
+# Nix
+
+In order to get a shell with interpreter (`qjs.sh`) and compiler (`qjsc.sh`), run following command
+
+```
+nix develop github:ctn-malone/quickjs-cross-compiler
+```
 
 # Embed custom javascript modules
 
