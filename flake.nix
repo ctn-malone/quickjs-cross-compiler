@@ -20,7 +20,7 @@
           else "unknown-arch";
         sha256 =
           if system == "x86_64-linux" then "sha256:125a4q49gqyma10d12syxa90blcdyx5rfky69xmcpkwn6q8842yr"
-          else if system == "armv7l-linux" then "sha256:125a4q49gqyma10d12syxa90blcdyx5rfky69xmcpkwn6q8842yr"
+          else if system == "armv7l-linux" then "sha256:1amn4d46cml3y8iq9a35aai59fqrjbnsik1vpc7z5n0hybs91bf9"
           else if system == "aarch64-linux" then "sha256:1rghzvqi6rjf402zg2bf94x1rnw6qc673cmdnpdcsk6ma2skqsi9"
           else "sha256:0000000000000000000000000000000000000000000000000000";
       in
