@@ -1,5 +1,9 @@
 # Change Log
 
+## [2023-12-09_1]
+
+* chore: QuickJS release `2023-12-09`
+
 ## [2021-03-27_4]
 
 * feat: expose `mkdtemp` function to javascript

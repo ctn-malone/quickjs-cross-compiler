@@ -1,0 +1,24 @@
+diff --git a/qjs.c b/qjs.c
+index c2d63e9..8084d8f 100644
+--- a/qjs.c
++++ b/qjs.c
+@@ -41,6 +41,8 @@
+ #include "cutils.h"
+ #include "quickjs-libc.h"
+ 
++#include "path.h"
++
+ extern const uint8_t qjsc_repl[];
+ extern const uint32_t qjsc_repl_size;
+ #ifdef CONFIG_BIGNUM
+@@ -337,7 +339,9 @@ int main(int argc, char **argv)
+         load_jscalc = !strcmp(exename, "qjscalc");
+     }
+ #endif
+-    
++
++    set_exe_dir_from_exe_name(argv[0]);
++
+     /* cannot use getopt because we want to pass the command line to
+        the script */
+     optind = 1;
