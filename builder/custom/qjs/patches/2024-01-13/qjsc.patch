@@ -1,0 +1,129 @@
+diff --git a/qjsc.c b/qjsc.c
+index f8e60b3..0505445 100644
+--- a/qjsc.c
++++ b/qjsc.c
+@@ -36,6 +36,8 @@
+ #include "cutils.h"
+ #include "quickjs-libc.h"
+ 
++#include "path.h"
++
+ typedef struct {
+     char *name;
+     char *short_name;
+@@ -253,12 +255,31 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
+         char cname[1024];
+         
+         buf = js_load_file(ctx, &buf_len, module_name);
++/*
+         if (!buf) {
+             JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
+                                    module_name);
+             return NULL;
+         }
+-        
++*/
++        if (!buf) {
++            char path[4096];
++            // check if a custom lib dir has been defined
++            char* lib_dir = getenv("QJS_LIB_DIR");
++            if (NULL == lib_dir) {
++                get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            }
++            else {
++                get_path_with_dir(path, sizeof(path), lib_dir, (char*)module_name);
++            }
++            buf = js_load_file(ctx, &buf_len, path);
++            if (!buf) {
++                JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
++                                       module_name);
++                return NULL;
++            }
++        }
++
+         /* compile the module */
+         func_val = JS_Eval(ctx, (char *)buf, buf_len, module_name,
+                            JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+@@ -369,6 +390,13 @@ void help(void)
+         printf("]\n"
+                "            disable selected language features (smaller code size)\n");
+     }
++#else
++    //-- define '-fbignum' if 'CONFIG_BIGNUM' is defined
++    #ifdef CONFIG_BIGNUM
++        {
++            printf("-fbignum    enable bignum extensions\n");
++        }
++    #endif
+ #endif
+     exit(1);
+ }
+@@ -400,6 +428,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     const char **arg, *bn_suffix, *lto_suffix;
+     char libjsname[1024];
+     char exe_dir[1024], inc_dir[1024], lib_dir[1024], buf[1024], *p;
++    //-- used to store relative path to musl-gcc
++    char musl_gcc[4096];
+     int ret;
+     
+     /* get the directory of the executable */
+@@ -426,8 +456,15 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     bn_suffix = "";
+     
+     arg = argv;
+-    *arg++ = CONFIG_CC;
++    //-- use included musl-gcc wrapper instead of default compiler
++    //*arg++ = CONFIG_CC;
++    snprintf(musl_gcc, sizeof(musl_gcc), "%s/musl-%s/bin/musl-gcc", exe_dir, MUSL_ARCH);
++    *arg++ = musl_gcc;
+     *arg++ = "-O2";
++    //-- force static compilation
++    *arg++ = "-static";
++    //-- strip
++    *arg++ = "-s";
+ #ifdef CONFIG_LTO
+     if (use_lto) {
+         *arg++ = "-flto";
+@@ -451,6 +488,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     *arg++ = "-lm";
+     *arg++ = "-ldl";
+     *arg++ = "-lpthread";
++    //-- link to libatomic (armv7l)
++    *arg++ = "-latomic";
+     *arg = NULL;
+     
+     if (verbose) {
+@@ -461,6 +500,24 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     
+     ret = exec_cmd((char **)argv);
+     unlink(cfilename);
++
++    //-- compress executable using upx
++    if (0 == ret) {
++        p = getenv("QJS_UPX");
++        if (NULL != p && 0 == strcmp(p, "1")) {
++            arg = argv;
++            *arg++ = "upx";
++            *arg++ = out_filename;
++            *arg = NULL;
++            if (verbose) {
++                for(arg = argv; *arg != NULL; arg++)
++                    printf("%s ", *arg);
++                printf("\n");
++            }
++            exec_cmd((char **)argv);
++        }
++    }
++
+     return ret;
+ }
+ #else
+@@ -512,6 +569,8 @@ int main(int argc, char **argv)
+     namelist_add(&cmodule_list, "std", "std", 0);
+     namelist_add(&cmodule_list, "os", "os", 0);
+ 
++    set_exe_dir_from_exe_name(argv[0]);
++
+     for(;;) {
+         c = getopt(argc, argv, "ho:cN:f:mxevM:p:S:D:");
+         if (c == -1)

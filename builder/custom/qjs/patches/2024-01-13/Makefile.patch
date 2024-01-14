@@ -1,0 +1,136 @@
+diff --git a/Makefile b/Makefile
+index 57cdd7e..d037ebf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,7 +28,8 @@ endif
+ # Windows cross compilation from Linux
+ #CONFIG_WIN32=y
+ # use link time optimization (smaller and faster executables but slower build)
+-CONFIG_LTO=y
++#-- disable LTO
++#CONFIG_LTO=y
+ # consider warnings as errors (for development)
+ #CONFIG_WERROR=y
+ # force 32 bit build for some utilities
+@@ -37,7 +38,10 @@ CONFIG_LTO=y
+ #CONFIG_COSMO=y
+ 
+ # installation directory
+-PREFIX?=/usr/local
++#PREFIX?=/usr/local
++#-- change prefix to /
++PREFIX?=/
++
+ 
+ # use the gprof profiler
+ #CONFIG_PROFILE=y
+@@ -97,7 +101,9 @@ else ifdef CONFIG_COSMO
+   AR=cosmoar
+ else
+   HOST_CC=gcc
+-  CC=$(CROSS_PREFIX)gcc
++  #-- use musl-gcc instead of gcc (symlink must exist)
++  #CC=$(CROSS_PREFIX)gcc
++  CC=$(CURDIR)/musl-$(musl_arch)/bin/musl-gcc
+   CFLAGS+=-g -Wall -MMD -MF $(OBJDIR)/$(@F).d
+   CFLAGS += -Wno-array-bounds -Wno-format-truncation
+   ifdef CONFIG_LTO
+@@ -112,6 +118,8 @@ ifdef CONFIG_WERROR
+ CFLAGS+=-Werror
+ endif
+ DEFINES:=-D_GNU_SOURCE -DCONFIG_VERSION=\"$(shell cat VERSION)\"
++#-- define target architecture
++DEFINES+=-DMUSL_ARCH=\"$(musl_arch)\"
+ ifdef CONFIG_BIGNUM
+ DEFINES+=-DCONFIG_BIGNUM
+ endif
+@@ -128,6 +136,10 @@ ifdef CONFIG_COSMO
+ LDFLAGS+=-s # better to strip by default
+ else
+ LDFLAGS+=-g
++#-- force static compilation
++LDFLAGS+=-static
++#-- disable PIE
++CFLAGS+=-no-pie
+ endif
+ ifdef CONFIG_LTO
+ CFLAGS_SMALL+=-flto
+@@ -174,20 +186,25 @@ ifdef CONFIG_LTO
+ PROGS+=libquickjs.lto.a
+ endif
+ 
++#--when architecture is not 'x86_64', we need to use the 'x86_64' version of the 'qjsc' binary to generate c files
++QJSC_X86_64=$(qjsc_binary)
++
+ # examples
+ ifeq ($(CROSS_PREFIX),)
+ PROGS+=examples/hello
+ ifndef CONFIG_ASAN
+-PROGS+=examples/hello_module
++#-- disable because of cross-compilation
++#PROGS+=examples/hello_module
+ endif
+ ifdef CONFIG_SHARED_LIBS
+-PROGS+=examples/test_fib examples/fib.so examples/point.so
++#-- disable because of cross-compilation
++#PROGS+=examples/test_fib examples/fib.so examples/point.so
+ endif
+ endif
+ 
+ all: $(OBJDIR) $(OBJDIR)/quickjs.check.o $(OBJDIR)/qjs.check.o $(PROGS)
+ 
+-QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o $(OBJDIR)/libbf.o 
++QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o $(OBJDIR)/libbf.o $(OBJDIR)/path.o
+ 
+ QJS_OBJS=$(OBJDIR)/qjs.o $(OBJDIR)/repl.o $(QJS_LIB_OBJS)
+ ifdef CONFIG_BIGNUM
+@@ -201,6 +218,9 @@ LIBS+=-ldl -lpthread
+ endif
+ LIBS+=$(EXTRA_LIBS)
+ 
++#-- static linking to libatomic (necessary for armv7l)
++LIBS+=-L $(CURDIR)/musl-$(musl_arch)/lib -latomic
++
+ $(OBJDIR):
+ 	mkdir -p $(OBJDIR) $(OBJDIR)/examples $(OBJDIR)/tests
+ 
+@@ -255,10 +275,12 @@ libquickjs.a: $(patsubst %.o, %.nolto.o, $(QJS_LIB_OBJS))
+ endif # CONFIG_LTO
+ 
+ repl.c: $(QJSC) repl.js
+-	$(QJSC) -c -o $@ -m repl.js
++	#-- will use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -c -o $@ -m repl.js
+ 
+ qjscalc.c: $(QJSC) qjscalc.js
+-	$(QJSC) -fbignum -c -o $@ qjscalc.js
++	#-- will use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -fbignum -c -o $@ qjscalc.js
+ 
+ ifneq ($(wildcard unicode/UnicodeData.txt),)
+ $(OBJDIR)/libunicode.o $(OBJDIR)/libunicode.m32.o $(OBJDIR)/libunicode.m32s.o \
+@@ -317,9 +339,12 @@ clean:
+ 	rm -rf $(OBJDIR)/ *.dSYM/ qjs-debug
+ 	rm -rf run-test262-debug run-test262-32
+ 
+-install: all
++#-- only install
++#install: all
++install:
+ 	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
+-	$(STRIP) qjs qjsc
++	#-- disable stripping (because of cross-compiling)
++	#$(STRIP) qjs qjsc
+ 	install -m755 qjs qjsc "$(DESTDIR)$(PREFIX)/bin"
+ 	ln -sf qjs "$(DESTDIR)$(PREFIX)/bin/qjscalc"
+ 	mkdir -p "$(DESTDIR)$(PREFIX)/lib/quickjs"
+@@ -340,7 +365,8 @@ HELLO_OPTS=-fno-string-normalize -fno-map -fno-promise -fno-typedarray \
+            -fno-date -fno-module-loader -fno-bigint
+ 
+ hello.c: $(QJSC) $(HELLO_SRCS)
+-	$(QJSC) -e $(HELLO_OPTS) -o $@ $(HELLO_SRCS)
++	#-- will use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -e $(HELLO_OPTS) -o $@ $(HELLO_SRCS)
+ 
+ ifdef CONFIG_M32
+ examples/hello: $(OBJDIR)/hello.m32s.o $(patsubst %.o, %.m32s.o, $(QJS_LIB_OBJS))

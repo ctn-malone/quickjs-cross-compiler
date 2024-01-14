@@ -17,7 +17,6 @@ By default, packages will be exported to `packages` directory, at the root of th
 
 **Table of content**
 - [Extra functions](#extra-functions)
-  - [os.getpid](#osgetpid)
   - [os.flock](#osflock)
   - [os.mkstemp](#osmkstemp)
   - [os.mkdtemp](#osmkdtemp)
@@ -32,16 +31,6 @@ By default, packages will be exported to `packages` directory, at the root of th
 # Extra functions
 
 Some extra functions not part of [vanilla QuickJS](https://bellard.org/quickjs/quickjs.html) have been added
-
-## os.getpid
-
-`os.getpid()`
-
-<u>Example</u>
-
-```js
-std.puts(os.getpid());
-```
 
 ## os.flock
 
@@ -97,11 +86,11 @@ A portable package containing interpreter & compiler can be generated using `doc
 ./docker/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
 Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2023-12-09')
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2024-01-13')
         -p, --packages-dir: directory where package will be exported (default: './packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.7.2')
+        --ext-lib-version: QuickJS extension library version (default: '0.8.1')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
@@ -120,7 +109,7 @@ Above command will :
 * build a *Docker* image (only if it does not already exist) which will download and build necessary dependencies
 * run a temporary container and :
   * enable verbose mode inside the container
-  * build *default* *QuickJS* version (`2020-11-08` as of 2020-11-18) for *default* architecture (`x86_64`)
+  * build *default* *QuickJS* version (`2024-01-13` as of 2024-01-14) for *default* architecture (`x86_64`)
   * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
@@ -137,12 +126,12 @@ A portable package containing interpreter & compiler can be generated using `bui
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
 Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
-        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2023-12-09')
+        <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2024-01-13')
         -p, --packages-dir: directory where package will be exported (default: './packages')
         --deps-dir: directory where dependencies should be stored/buil (default: './deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.7.2')
+        --ext-lib-version: QuickJS extension library version (default: '0.8.1')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
@@ -162,16 +151,16 @@ Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <
 Above command will :
 
 * download and build necessary dependencies under *default* location (`deps` directory at the root of the repository)
-* build *default* *QuickJS* version (`2023-12-09` as of 2023-12-10) for *default* architecture (`x86_64`)
+* build *default* *QuickJS* version (`2024-01-13` as of 2024-01-14) for *default* architecture (`x86_64`)
 * export portable package to *default* location (`packages` directory at the root of the repository)
 
 ```
-./builder/build_and_export_qjs.sh '2023-12-09' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
+./builder/build_and_export_qjs.sh '2024-01-13' -a armv7l -p /usr/local/packages -d /usr/local/deps -v
 ```
 
 Above command will :
 
-* build *QuickJS* version `2023-12-09` for `armv7l` architecture
+* build *QuickJS* version `2024-01-13` for `armv7l` architecture
 * download and build necessary dependencies under `/usr/local/deps`
 * export portable package to `/usr/local/packages`
 * enable verbose mode

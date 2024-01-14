@@ -1,7 +1,7 @@
 # QuickJS repository to clone
 qjs_repository="https://github.com/bellard/quickjs.git"
 
-default_qjs_version="2023-12-09"
+default_qjs_version="2024-01-13"
 
 # mapping qjs version => commit id
 declare -A qjs_commits=(
@@ -9,6 +9,7 @@ declare -A qjs_commits=(
     ["2020-11-08"]="204682fb87ab9312f0cf81f959ecd181180457bc"
     ["2021-03-27"]="b5e62895c619d4ffc75c9d822c8d85f1ece77e5b"
     ["2023-12-09"]="daa35bc1e5d43192098af9b51caeb4f18f73f9f9"
+    ["2024-01-13"]="3f81070e573e3592728dbbbd04c84c498b20d6dc"
 )
 
 # mapping qjs version => package name
@@ -17,8 +18,9 @@ declare -A qjs_packages=(
     ["2020-11-08"]="2020-11-08_3"
     ["2021-03-27"]="2021-03-27_4"
     ["2023-12-09"]="2023-12-09_1"
+    ["2024-01-13"]="2024-01-13_1"
 )
 
 # default tag for https://github.com/ctn-malone/qjs-ext-lib
 qjs_ext_lib_repository="https://github.com/ctn-malone/qjs-ext-lib"
-default_qjs_ext_lib_version="0.7.2"
+default_qjs_ext_lib_version="0.8.1"
