@@ -1,5 +1,9 @@
 # Change Log
 
+## [2024-01-13_1]
+
+* chore: QuickJS release `2024-01-13`
+
 ## [2023-12-09_1]
 
 * chore: QuickJS release `2023-12-09`
