@@ -221,6 +221,20 @@ In order to get a shell with interpreter (`qjs.sh`) and compiler (`qjsc.sh`), ru
 nix develop github:ctn-malone/quickjs-cross-compiler
 ```
 
+Following commands can also be used to run `qjs.sh` or `qjsc.sh` using `nix run`
+
+- run `qjs.sh`
+
+```
+nix run github:ctn-malone/quickjs-cross-compiler
+```
+
+- run `qjsc.sh`
+
+```
+nix run github:ctn-malone/quickjs-cross-compiler#qjsc
+```
+
 # Embed custom javascript modules
 
 Starting from release `2020-11-08_2`, any javascript file placed alongside `qjs` & `qjsc` binaries can be referenced relatively from your main script.

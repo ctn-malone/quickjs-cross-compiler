@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs = {
-      url = "github:nixos/nixpkgs?rev=057f9aecfb71c4437d2b27d3323df7f93c010b7e";
+      url = "github:nixos/nixpkgs/nixos-unstable";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -13,6 +13,7 @@
     flake-utils.lib.eachSystem [ "x86_64-linux" "armv7l-linux" "aarch64-linux" ] (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        highlight = text: "\\x1b[1;38;5;212m${text}\\x1b[0m";
         qjs_version = "2024-01-13_1";
         arch =
           if system == "x86_64-linux" then "x86_64"
@@ -46,6 +47,22 @@
 
         defaultPackage = self.packages.${system}.quickjs-static;
 
+        apps = {
+          # interpreter
+          default = {
+            type = "app";
+            program = "${self.packages.${system}.quickjs-static}/bin/qjs.sh";
+          };
+
+          qjs = self.apps.${system}.default;
+
+          # compiler
+          qjsc = {
+            type = "app";
+            program = "${self.packages.${system}.quickjs-static}/bin/qjsc.sh";
+          };
+        };
+
         devShell = pkgs.mkShell {
           name = "quickjs-static";
 
@@ -55,8 +72,8 @@
           ];
 
           shellHook = ''
-            echo "To compile a JS file, use qjsc.sh -o <binary> <source>" 1>&2
-            echo "To run a JS file, use qjs.sh <source>" 1>&2
+            echo -e "To compile a JS file, use ${highlight "qjsc.sh -o <binary> <source>"}" 1>&2
+            echo -e "To run a JS file, use ${highlight "qjs.sh <source>"}" 1>&2
           '';
         };
       }
