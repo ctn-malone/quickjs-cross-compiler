@@ -1,5 +1,5 @@
 {
-  description = "QuickJs Static Compiler";
+  description = "QuickJS Static Compiler";
 
   inputs = {
     nixpkgs = {
