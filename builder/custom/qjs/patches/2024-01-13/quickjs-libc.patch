@@ -87,7 +87,7 @@ index d4f4d67..26d7f7f 100644
 +                            max_fd = fd;
 +                        }
 +                    }
-+                    if (max_fd  > 0) {
++                    if (max_fd > 0) {
 +                        fd_max = max_fd;
 +                    }
 +                    closedir(dir);
