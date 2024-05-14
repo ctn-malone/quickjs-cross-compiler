@@ -14,7 +14,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         highlight = text: "\\x1b[1;38;5;212m${text}\\x1b[0m";
-        qjs_version = "2024-01-13_1";
+        qjs_version = "2024-01-13_2";
         arch =
           if system == "x86_64-linux" then "x86_64"
           else if system == "armv7l-linux" then "armv7l"

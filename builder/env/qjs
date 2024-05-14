@@ -18,9 +18,9 @@ declare -A qjs_packages=(
     ["2020-11-08"]="2020-11-08_3"
     ["2021-03-27"]="2021-03-27_4"
     ["2023-12-09"]="2023-12-09_1"
-    ["2024-01-13"]="2024-01-13_1"
+    ["2024-01-13"]="2024-01-13_2"
 )
 
 # default tag for https://github.com/ctn-malone/qjs-ext-lib
 qjs_ext_lib_repository="https://github.com/ctn-malone/qjs-ext-lib"
-default_qjs_ext_lib_version="0.8.1"
+default_qjs_ext_lib_version="0.10.0"
