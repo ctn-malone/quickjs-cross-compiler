@@ -1,5 +1,9 @@
 # Change Log
 
+## [2024-01-13_2]
+
+* feat: improve `js_os_exec` performances by computing `fd_max` using `/proc`
+
 ## [2024-01-13_1]
 
 * chore: QuickJS release `2024-01-13`

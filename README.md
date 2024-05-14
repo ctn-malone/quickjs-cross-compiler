@@ -20,6 +20,7 @@ By default, packages will be exported to `packages` directory, at the root of th
   - [os.flock](#osflock)
   - [os.mkstemp](#osmkstemp)
   - [os.mkdtemp](#osmkdtemp)
+- [Other changes](#other-changes)
 - [Generate a portable package using *Docker*](#generate-a-portable-package-using-docker)
 - [Generate a portable package without using *Docker*](#generate-a-portable-package-without-using-docker)
 - [Using the portable compiler](#using-the-portable-compiler)
@@ -75,6 +76,10 @@ const errObj = {};
 const dirname = os.mkdtemp('/tmp/randomXXXXXX', errObj);
 std.puts(dirname)
 ```
+
+# Other changes
+
+- improve `js_os_exec` performances by computing `fd_max` using `/proc`
 
 # Generate a portable package using *Docker*
 
