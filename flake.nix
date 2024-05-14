@@ -21,9 +21,9 @@
           else if system == "aarch64-linux" then "aarch64"
           else "unknown-arch";
         sha256 =
-          if system == "x86_64-linux" then "sha256:00rk22na9vlfn3jpj2wjqhaqxz8r6j7wp5nr2pn84nwziy7xvkf5"
-          else if system == "armv7l-linux" then "sha256:0wk3n8rmnpnjpgn2ab375d7halr6cxi8fh6bvvzahq27pbf79yy5"
-          else if system == "aarch64-linux" then "sha256:139lfvdfbjix0z6szsq0nmmx3jvbgj56amqlg877830af2vhmr3g"
+          if system == "x86_64-linux" then "sha256:07w6z2a267variya9k62bv932i5m1pd90wqsyki87376wz2cmjj5"
+          else if system == "armv7l-linux" then "sha256:1lqhyfxayy3ja6vhrmcp40gw6psnsp2bwj44klm9nbjyilqinv1r"
+          else if system == "aarch64-linux" then "sha256:1pw6afqnh04h4xv06035gs23prfrl36rlqz4awzxqjj68zh5d0s9"
           else "sha256:0000000000000000000000000000000000000000000000000000";
       in
       {
