@@ -14,16 +14,16 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         highlight = text: "\\x1b[1;38;5;212m${text}\\x1b[0m";
-        qjs_version = "2024-01-13_2";
+        qjs_version = "2024-01-13_3";
         arch =
           if system == "x86_64-linux" then "x86_64"
           else if system == "armv7l-linux" then "armv7l"
           else if system == "aarch64-linux" then "aarch64"
           else "unknown-arch";
         sha256 =
-          if system == "x86_64-linux" then "sha256:07w6z2a267variya9k62bv932i5m1pd90wqsyki87376wz2cmjj5"
-          else if system == "armv7l-linux" then "sha256:1lqhyfxayy3ja6vhrmcp40gw6psnsp2bwj44klm9nbjyilqinv1r"
-          else if system == "aarch64-linux" then "sha256:1pw6afqnh04h4xv06035gs23prfrl36rlqz4awzxqjj68zh5d0s9"
+          if system == "x86_64-linux" then "sha256:10lzv5h0iidyfbqghyhdvwhnha095fhfxwx133iyfb906zaz3rih"
+          else if system == "armv7l-linux" then "sha256:0hyj5nnirang29f9av7dn5wq8nk8sz86vpzarqzg5kapk4yklw11"
+          else if system == "aarch64-linux" then "sha256:05myyxk3hlsd7d1rkixv2kfip7dbhra9vnxcmhnz9ficvypm0m8d"
           else "sha256:0000000000000000000000000000000000000000000000000000";
       in
       {
@@ -32,7 +32,7 @@
           name = "quickjs-static";
 
           src = builtins.fetchTarball {
-            url = "https://github.com/ctn-malone/quickjs-cross-compiler/releases/download/v${qjs_version}/quickjs.core.${qjs_version}.${arch}.tar.xz";
+            url = "https://github.com/ctn-malone/quickjs-cross-compiler/releases/download/v${qjs_version}/quickjs.core.${qjs_version}.aarch64.tar.xz";
             sha256 = sha256;
           };
 
