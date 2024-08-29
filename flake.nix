@@ -32,7 +32,7 @@
           name = "quickjs-static";
 
           src = builtins.fetchTarball {
-            url = "https://github.com/ctn-malone/quickjs-cross-compiler/releases/download/v${qjs_version}/quickjs.core.${qjs_version}.aarch64.tar.xz";
+            url = "https://github.com/ctn-malone/quickjs-cross-compiler/releases/download/v${qjs_version}/quickjs.core.${qjs_version}.${arch}.tar.xz";
             sha256 = sha256;
           };
 
