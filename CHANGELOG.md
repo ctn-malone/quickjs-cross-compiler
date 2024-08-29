@@ -1,5 +1,9 @@
 # Change Log
 
+## [2024-01-13_3]
+
+* refactor: refactor: use `type -p` instead of `which` in `qjsc.sh`
+
 ## [2024-01-13_2]
 
 * feat: improve `js_os_exec` performances by computing `fd_max` using `/proc`
