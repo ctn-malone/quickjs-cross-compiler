@@ -15,6 +15,9 @@ Static compiler should work with any Linux distribution with *gcc* >= `4.3.2` an
 
 By default, packages will be exported to `packages` directory, at the root of the repository
 
+Don't forget to check the [qjs-ext-lib](https://github.com/ctn-malone/qjs-ext-lib) repo which provides some
+wrappers around common unix tools to do HTTP requests or execute external programs (and more) 😊
+
 **Table of content**
 - [Extra functions](#extra-functions)
   - [os.flock](#osflock)
