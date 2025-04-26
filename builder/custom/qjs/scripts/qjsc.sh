@@ -14,7 +14,7 @@
 # if variable is not defined yet, check if upx is available
 if [ -z ${QJS_UPX} ]
 then
-    upx=$(type -p upx)
+    upx=$(command -v upx)
     if ! [ -z ${upx} ]
     then
         QJS_UPX=1

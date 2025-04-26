@@ -13,15 +13,7 @@ do
     echo "Compiling '${js_file}'..."
     filename="$(basename ${js_file} .js)"
     binary_file="${script_dir}/${filename}"
-    # add bignum extension if needed
-    bignum_flag=""
-    if [ ${filename} = "pi_bigdecimal" ] || \
-       [ ${filename} = "pi_bigfloat" ] || \
-       [ ${filename} = "pi_bigfloat" ]
-    then
-        bignum_flag="-fbignum"
-    fi
-    ${script_dir}/../qjsc.sh ${bignum_flag} -o ${binary_file} ${js_file} || exit 1
+    ${script_dir}/../qjsc.sh -o ${binary_file} ${js_file} || exit 1
 done
 # compile binaries for ext-lib
 if [ -d ${script_dir}/ext-lib ]
