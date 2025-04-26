@@ -1,5 +1,9 @@
 # Change Log
 
+## [2025-04-26_1]
+
+* chore: QuickJS release `2025-04-26`
+
 ## [2024-01-13_3]
 
 * refactor: refactor: use `type -p` instead of `which` in `qjsc.sh`
