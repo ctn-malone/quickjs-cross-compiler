@@ -12,8 +12,12 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachSystem [ "x86_64-linux" "armv7l-linux" "aarch64-linux" ] (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+        };
+
         highlight = text: "\\x1b[1;38;5;212m${text}\\x1b[0m";
+
         qjs_version = "2025-04-26_1";
         arch =
           if system == "x86_64-linux" then "x86_64"
@@ -25,10 +29,8 @@
           else if system == "armv7l-linux" then "sha256:0imv0f9arajjxj5hapd09sn43mf79lswpgpdcqfaajnhcha4m592"
           else if system == "aarch64-linux" then "sha256:06y42w0ak9brapvwszm74qrgs5yhlkbcs44kj4anwnx9mmgdv3an"
           else "sha256:0000000000000000000000000000000000000000000000000000";
-      in
-      {
 
-        packages.quickjs-static = pkgs.stdenv.mkDerivation {
+        quickjsStatic = pkgs.stdenv.mkDerivation {
           name = "quickjs-static";
 
           src = builtins.fetchTarball {
@@ -45,13 +47,18 @@
           '';
         };
 
+      in
+      {
+
+        packages.quickjs-static = quickjsStatic;
+
         defaultPackage = self.packages.${system}.quickjs-static;
 
         apps = {
           # interpreter
           default = {
             type = "app";
-            program = "${self.packages.${system}.quickjs-static}/bin/qjs.sh";
+            program = "${quickjsStatic}/bin/qjs.sh";
           };
 
           qjs = self.apps.${system}.default;
@@ -59,7 +66,7 @@
           # compiler
           qjsc = {
             type = "app";
-            program = "${self.packages.${system}.quickjs-static}/bin/qjsc.sh";
+            program = "${quickjsStatic}/bin/qjsc.sh";
           };
         };
 
@@ -68,7 +75,7 @@
 
           buildInputs = [
             pkgs.upx
-            self.packages.${system}.quickjs-static
+            quickjsStatic
           ];
 
           shellHook = ''
