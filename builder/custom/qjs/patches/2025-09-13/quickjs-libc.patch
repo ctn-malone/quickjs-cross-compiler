@@ -1,0 +1,224 @@
+diff --git a/quickjs-libc.c b/quickjs-libc.c
+index 54a7a15..88b1dac 100644
+--- a/quickjs-libc.c
++++ b/quickjs-libc.c
+@@ -76,10 +76,17 @@ typedef sig_t sighandler_t;
+ #include "list.h"
+ #include "quickjs-libc.h"
+ 
++#include "path.h"
++
+ #if !defined(PATH_MAX)
+ #define PATH_MAX 4096
+ #endif
+ 
++#if !defined(_WIN32) && !defined(__APPLE__)
++// flock
++#include <sys/file.h>
++#endif /* !_WIN32 && !_APPLE_
++
+ /* TODO:
+    - add socket calls
+ */
+@@ -688,11 +695,30 @@ JSModuleDef *js_module_loader(JSContext *ctx,
+         uint8_t *buf;
+ 
+         buf = js_load_file(ctx, &buf_len, module_name);
++/*
+         if (!buf) {
+             JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
+                                    module_name);
+             return NULL;
+         }
++*/            
++        if (!buf) {
++            char path[4096];
++            // check if a custom lib dir has been defined
++            char* lib_dir = getenv("QJS_LIB_DIR");
++            if (NULL == lib_dir) {
++                get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            }
++            else {
++                get_path_with_dir(path, sizeof(path), lib_dir, (char*)module_name);
++            }
++            buf = js_load_file(ctx, &buf_len, path);
++            if (!buf) {
++                JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
++                                       module_name);
++                return NULL;
++            }
++        }
+         res = js_module_test_json(ctx, attributes);
+         if (has_suffix(module_name, ".json") || res > 0) {
+             /* compile as JSON or JSON5 depending on "type" */
+@@ -1634,6 +1660,12 @@ static const JSCFunctionListEntry js_std_error_props[] = {
+     DEF(EPERM),
+     DEF(EPIPE),
+     DEF(EBADF),
++#if !defined(_WIN32) && !defined(_APPLE_)
++    // flock
++    DEF(EINTR),
++    DEF(ENOLCK),
++    DEF(EWOULDBLOCK)
++#endif /* !_WIN32 && !_APPLE_ */
+ #undef DEF
+ };
+ 
+@@ -3234,6 +3266,7 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
+     }
+     if (pid == 0) {
+         /* child */
++        int fd_max = sysconf(_SC_OPEN_MAX);
+ 
+         /* remap the stdin/stdout/stderr handles if necessary */
+         for(i = 0; i < 3; i++) {
+@@ -3242,28 +3275,39 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
+                     _exit(127);
+             }
+         }
+-#if defined(HAVE_CLOSEFROM)
+-        /* closefrom() is available on many recent unix systems:
+-           Linux with glibc 2.34+, Solaris 9+, FreeBSD 7.3+,
+-           NetBSD 3.0+, OpenBSD 3.5+.
+-           Linux with the musl libc and macOS don't have it.
+-         */
+-
+-        closefrom(3);
+-#else
+-        {
+-            /* Close the file handles manually, limit to 1024 to avoid
+-               costly loop on linux Alpine where sysconf(_SC_OPEN_MAX)
+-               returns a huge value 1048576.
+-               Patch inspired by nicolas-duteil-nova. See also:
+-               https://stackoverflow.com/questions/73229353/
+-               https://stackoverflow.com/questions/899038/#918469
+-             */
+-            int fd_max = min_int(sysconf(_SC_OPEN_MAX), 1024);
+-            for(i = 3; i < fd_max; i++)
+-                close(i);
++
++#if defined(__linux__)
++        int pid = getpid();
++        int max_fd = 0;
++        char path[32];
++        struct stat statbuf;
++        sprintf(path, "/proc/%d/fd", pid);
++        if (stat(path, &statbuf) == 0) {
++            if (S_ISDIR(statbuf.st_mode)) {
++                DIR *dir = opendir(path);
++                if (dir) {
++                    struct dirent *subdir;
++                    int fd;
++                    for(;;) {
++                        subdir = readdir(dir);
++                        if (!subdir) {
++                            break;
++                        }
++                        fd = atoi(subdir->d_name);
++                        if (fd > max_fd) {
++                            max_fd = fd;
++                        }
++                    }
++                    if (max_fd > 0) {
++                        fd_max = max_fd;
++                    }
++                    closedir(dir);
++                }
++            }
+         }
+ #endif
++            for(i = 3; i < fd_max; i++)
++                close(i);
+         if (cwd) {
+             if (chdir(cwd) < 0)
+                 _exit(127);
+@@ -3418,6 +3462,72 @@ static JSValue js_os_dup2(JSContext *ctx, JSValueConst this_val,
+     ret = js_get_errno(dup2(fd, fd2));
+     return JS_NewInt32(ctx, ret);
+ }
++#if !defined(_APPLE_)
++
++/* flock(fd, operation) */
++static JSValue js_os_flock(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    int fd, operation, ret;
++    if (JS_ToInt32(ctx, &fd, argv[0]))
++        return JS_EXCEPTION;
++    if (JS_ToInt32(ctx, &operation, argv[1]))
++        return JS_EXCEPTION;
++    ret = js_get_errno(flock(fd, operation));
++    return JS_NewInt32(ctx, ret);
++}
++
++/* mkstemp(template, outputObj) */
++static JSValue js_os_mkstemp(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    char buffer[PATH_MAX];
++    const char *template;
++    int ret;
++
++    template = JS_ToCString(ctx, argv[0]);
++    if (!template)
++        return JS_EXCEPTION;
++    strncpy(buffer, template, sizeof(buffer));
++    JS_FreeCString(ctx, template);
++    ret = js_get_errno(mkstemp(buffer));
++    // check if we can pass the final filename back
++    if (argc >= 2 && ret > 0) {
++        if (!JS_IsUndefined(argv[1])) {
++            JS_SetPropertyStr(ctx, argv[1], "filename", JS_NewString(ctx, buffer));
++        }
++    }
++    return JS_NewInt32(ctx, ret);
++}
++
++/* mkdtemp(template, errorObj) */
++static JSValue js_os_mkdtemp(JSContext *ctx, JSValueConst this_val,
++                            int argc, JSValueConst *argv)
++{
++    char buffer[PATH_MAX];
++    const char *template;
++    const char *ptr;
++    int err = 0;
++
++    template = JS_ToCString(ctx, argv[0]);
++    if (!template)
++        return JS_EXCEPTION;
++    strncpy(buffer, template, sizeof(buffer));
++    JS_FreeCString(ctx, template);
++    ptr = mkdtemp(buffer);
++    if (NULL == ptr) {
++        err = errno;
++    }
++    if (argc >= 2) {
++        js_set_error_object(ctx, argv[1], err);
++    }
++    if (NULL == ptr) {
++        return JS_NULL;
++    }
++    return JS_NewString(ctx, ptr);
++}
++
++#endif /* !_APPLE_ */
+ 
+ #endif /* !_WIN32 */
+ 
+@@ -3956,6 +4066,16 @@ static const JSCFunctionListEntry js_os_funcs[] = {
+     JS_CFUNC_DEF("dup", 1, js_os_dup ),
+     JS_CFUNC_DEF("dup2", 2, js_os_dup2 ),
+ #endif
++#if !defined(_WIN32) && !defined(_APPLE_)
++    // flock
++    JS_CFUNC_DEF("flock", 2, js_os_flock ),
++    OS_FLAG(LOCK_EX),
++    OS_FLAG(LOCK_NB),
++    // mkstemp
++    JS_CFUNC_DEF("mkstemp", 1, js_os_mkstemp ),
++    // mkdtemp
++    JS_CFUNC_DEF("mkdtemp", 1, js_os_mkdtemp ),
++#endif
+ };
+ 
+ static int js_os_init(JSContext *ctx, JSModuleDef *m)

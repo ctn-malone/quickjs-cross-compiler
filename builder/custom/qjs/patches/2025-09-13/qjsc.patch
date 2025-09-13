@@ -1,0 +1,111 @@
+diff --git a/qjsc.c b/qjsc.c
+index e55ca61..748ddf7 100644
+--- a/qjsc.c
++++ b/qjsc.c
+@@ -36,6 +36,8 @@
+ #include "cutils.h"
+ #include "quickjs-libc.h"
+ 
++#include "path.h"
++
+ typedef struct {
+     char *name;
+     char *short_name;
+@@ -264,11 +266,30 @@ JSModuleDef *jsc_module_loader(JSContext *ctx,
+         int res;
+         
+         buf = js_load_file(ctx, &buf_len, module_name);
++/*
+         if (!buf) {
+             JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
+                                    module_name);
+             return NULL;
+         }
++*/
++        if (!buf) {
++            char path[4096];
++            // check if a custom lib dir has been defined
++            char* lib_dir = getenv("QJS_LIB_DIR");
++            if (NULL == lib_dir) {
++                get_path_with_exe_dir(path, sizeof(path), (char*)module_name);
++            }
++            else {
++                get_path_with_dir(path, sizeof(path), lib_dir, (char*)module_name);
++            }
++            buf = js_load_file(ctx, &buf_len, path);
++            if (!buf) {
++                JS_ThrowReferenceError(ctx, "could not load module filename '%s'",
++                                       module_name);
++                return NULL;
++            }
++        }
+ 
+         res = js_module_test_json(ctx, attributes);
+         if (has_suffix(module_name, ".json") || res > 0) {
+@@ -453,6 +474,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     const char **arg, *bn_suffix, *lto_suffix;
+     char libjsname[1024];
+     char exe_dir[1024], inc_dir[1024], lib_dir[1024], buf[1024], *p;
++    //-- used to store relative path to musl-gcc
++    char musl_gcc[4096];
+     int ret;
+ 
+     /* get the directory of the executable */
+@@ -479,8 +502,15 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     bn_suffix = "";
+ 
+     arg = argv;
+-    *arg++ = CONFIG_CC;
++    //-- use included musl-gcc wrapper instead of default compiler
++    //*arg++ = CONFIG_CC;
++    snprintf(musl_gcc, sizeof(musl_gcc), "%s/musl-%s/bin/musl-gcc", exe_dir, MUSL_ARCH);
++    *arg++ = musl_gcc;
+     *arg++ = "-O2";
++    //-- force static compilation
++    *arg++ = "-static";
++    //-- strip
++    *arg++ = "-s";
+ #ifdef CONFIG_LTO
+     if (use_lto) {
+         *arg++ = "-flto";
+@@ -504,6 +534,8 @@ static int output_executable(const char *out_filename, const char *cfilename,
+     *arg++ = "-lm";
+     *arg++ = "-ldl";
+     *arg++ = "-lpthread";
++    //-- link to libatomic (armv7l)
++    *arg++ = "-latomic";
+     *arg = NULL;
+ 
+     if (verbose) {
+@@ -514,6 +546,22 @@ static int output_executable(const char *out_filename, const char *cfilename,
+ 
+     ret = exec_cmd((char **)argv);
+     unlink(cfilename);
++    //-- compress executable using upx
++    if (0 == ret) {
++        p = getenv("QJS_UPX");
++        if (NULL != p && 0 == strcmp(p, "1")) {
++            arg = argv;
++            *arg++ = "upx";
++            *arg++ = out_filename;
++            *arg = NULL;
++            if (verbose) {
++                for(arg = argv; *arg != NULL; arg++)
++                    printf("%s ", *arg);
++                printf("\n");
++            }
++            exec_cmd((char **)argv);
++        }
++    }
+     return ret;
+ }
+ #else
+@@ -603,6 +651,8 @@ int main(int argc, char **argv)
+     namelist_add(&cmodule_list, "std", "std", 0);
+     namelist_add(&cmodule_list, "os", "os", 0);
+ 
++    set_exe_dir_from_exe_name(argv[0]);
++
+     optind = 1;
+     while (optind < argc && *argv[optind] == '-') {
+         char *arg = argv[optind] + 1;

@@ -214,8 +214,8 @@ patch_qjs()
     if ! [ -f ${_patched_marker} ]
     then
         cd ${repo_dir}
-
-        for file in $(ls $_patch_dir/*.patch)
+		files=$(ls ${_patch_dir}/*.patch) || exit $?
+        for file in ${files}
         do
             # check if patch has already been applied
             patch -Rp1 -s -f --dry-run <$file >/dev/null 2>&1
