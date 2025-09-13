@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 3b1c745..ad50e54 100644
+index 3b1c745..2e1859a 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -43,7 +43,9 @@ endif
@@ -123,4 +123,14 @@ index 3b1c745..ad50e54 100644
 +	$(QJSC_X86_64) -e $(HELLO_OPTS) -o $@ $(HELLO_SRCS)
  
  examples/hello: $(OBJDIR)/hello.o $(QJS_LIB_OBJS)
+ 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+@@ -402,7 +425,8 @@ examples/hello_module: $(QJSC) libquickjs$(LTOEXT).a $(HELLO_MODULE_SRCS)
+ # use of an external C module (static compilation)
+ 
+ test_fib.c: $(QJSC) examples/test_fib.js
+-	$(QJSC) -e -M examples/fib.so,fib -m -o $@ examples/test_fib.js
++	#-- we use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -e -M examples/fib.so,fib -m -o $@ examples/test_fib.js
+ 
+ examples/test_fib: $(OBJDIR)/test_fib.o $(OBJDIR)/examples/fib.o libquickjs$(LTOEXT).a
  	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
