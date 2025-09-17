@@ -1,0 +1,136 @@
+diff --git a/Makefile b/Makefile
+index 3b1c745..2e1859a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -43,7 +43,9 @@ endif
+ #CONFIG_COSMO=y
+ 
+ # installation directory
+-PREFIX?=/usr/local
++#PREFIX?=/usr/local
++#-- change prefix to /
++PREFIX?=/
+ 
+ # use the gprof profiler
+ #CONFIG_PROFILE=y
+@@ -126,7 +128,9 @@ else ifdef CONFIG_COSMO
+   AR=cosmoar
+ else
+   HOST_CC=gcc
+-  CC=$(CROSS_PREFIX)gcc
++  #-- use musl-gcc instead of gcc (symlink must exist)
++  #CC=$(CROSS_PREFIX)gcc
++  CC=$(CURDIR)/musl-$(musl_arch)/bin/musl-gcc
+   CFLAGS+=-g -Wall -MMD -MF $(OBJDIR)/$(@F).d
+   CFLAGS += -Wno-array-bounds -Wno-format-truncation -Wno-infinite-recursion
+   ifdef CONFIG_LTO
+@@ -148,6 +152,8 @@ ifdef CONFIG_WERROR
+ CFLAGS+=-Werror
+ endif
+ DEFINES:=-D_GNU_SOURCE -DCONFIG_VERSION=\"$(shell cat VERSION)\"
++#-- define target architecture
++DEFINES+=-DMUSL_ARCH=\"$(musl_arch)\"
+ ifdef CONFIG_WIN32
+ DEFINES+=-D__USE_MINGW_ANSI_STDIO # for standard snprintf behavior
+ endif
+@@ -166,6 +172,10 @@ ifdef CONFIG_COSMO
+ LDFLAGS+=-s # better to strip by default
+ else
+ LDFLAGS+=-g
++#-- force static compilation
++LDFLAGS+=-static
++#-- disable PIE
++CFLAGS+=-no-pie
+ endif
+ ifdef CONFIG_LTO
+ CFLAGS_SMALL+=-flto
+@@ -217,6 +227,9 @@ ifdef CONFIG_LTO
+ PROGS+=libquickjs.lto.a
+ endif
+ 
++#--when architecture is not 'x86_64', we need to use the 'x86_64' version of the 'qjsc' binary to generate c files
++QJSC_X86_64=$(qjsc_binary)
++
+ # examples
+ ifeq ($(CROSS_PREFIX),)
+ ifndef CONFIG_ASAN
+@@ -226,11 +239,13 @@ PROGS+=examples/hello examples/test_fib
+ # no -m32 option in qjsc
+ ifndef CONFIG_M32
+ ifndef CONFIG_WIN32
+-PROGS+=examples/hello_module
++#-- disable because of cross-compilation
++#PROGS+=examples/hello_module
+ endif
+ endif
+ ifdef CONFIG_SHARED_LIBS
+-PROGS+=examples/fib.so examples/point.so
++#-- disable because of cross-compilation
++#PROGS+=examples/fib.so examples/point.so
+ endif
+ endif
+ endif
+@@ -239,7 +254,7 @@ endif
+ 
+ all: $(OBJDIR) $(OBJDIR)/quickjs.check.o $(OBJDIR)/qjs.check.o $(PROGS)
+ 
+-QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/dtoa.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o
++QJS_LIB_OBJS=$(OBJDIR)/quickjs.o $(OBJDIR)/dtoa.o $(OBJDIR)/libregexp.o $(OBJDIR)/libunicode.o $(OBJDIR)/cutils.o $(OBJDIR)/quickjs-libc.o $(OBJDIR)/path.o
+ 
+ QJS_OBJS=$(OBJDIR)/qjs.o $(OBJDIR)/repl.o $(QJS_LIB_OBJS)
+ 
+@@ -250,6 +265,9 @@ LIBS+=-ldl
+ endif
+ LIBS+=$(EXTRA_LIBS)
+ 
++#-- static linking to libatomic (necessary for armv7l)
++LIBS+=-L $(CURDIR)/musl-$(musl_arch)/lib -latomic
++
+ $(OBJDIR):
+ 	mkdir -p $(OBJDIR) $(OBJDIR)/examples $(OBJDIR)/tests
+ 
+@@ -308,7 +326,8 @@ libquickjs.fuzz.a: $(patsubst %.o, %.fuzz.o, $(QJS_LIB_OBJS))
+ 	$(AR) rcs $@ $^
+ 
+ repl.c: $(QJSC) repl.js
+-	$(QJSC) -s -c -o $@ -m repl.js
++	#-- we use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -s -c -o $@ -m repl.js
+ 
+ ifneq ($(wildcard unicode/UnicodeData.txt),)
+ $(OBJDIR)/libunicode.o $(OBJDIR)/libunicode.nolto.o: libunicode-table.h
+@@ -364,9 +383,12 @@ clean:
+ 	rm -rf run-test262-debug$(EXE)
+ 	rm -f run_octane run_sunspider_like
+ 
+-install: all
++#-- only install
++#install: all
++install:
+ 	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
+-	$(STRIP) qjs$(EXE) qjsc$(EXE)
++	#-- disable stripping (because of cross-compiling)
++	#$(STRIP) qjs$(EXE) qjsc$(EXE)
+ 	install -m755 qjs$(EXE) qjsc$(EXE) "$(DESTDIR)$(PREFIX)/bin"
+ 	mkdir -p "$(DESTDIR)$(PREFIX)/lib/quickjs"
+ 	install -m644 libquickjs.a "$(DESTDIR)$(PREFIX)/lib/quickjs"
+@@ -386,7 +408,8 @@ HELLO_OPTS=-fno-string-normalize -fno-map -fno-promise -fno-typedarray \
+            -fno-date -fno-module-loader
+ 
+ hello.c: $(QJSC) $(HELLO_SRCS)
+-	$(QJSC) -e $(HELLO_OPTS) -o $@ $(HELLO_SRCS)
++	#-- we use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -e $(HELLO_OPTS) -o $@ $(HELLO_SRCS)
+ 
+ examples/hello: $(OBJDIR)/hello.o $(QJS_LIB_OBJS)
+ 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+@@ -402,7 +425,8 @@ examples/hello_module: $(QJSC) libquickjs$(LTOEXT).a $(HELLO_MODULE_SRCS)
+ # use of an external C module (static compilation)
+ 
+ test_fib.c: $(QJSC) examples/test_fib.js
+-	$(QJSC) -e -M examples/fib.so,fib -m -o $@ examples/test_fib.js
++	#-- we use the 'x86_64' version of 'qjsc' when architecture is not 'x86_64'
++	$(QJSC_X86_64) -e -M examples/fib.so,fib -m -o $@ examples/test_fib.js
+ 
+ examples/test_fib: $(OBJDIR)/test_fib.o $(OBJDIR)/examples/fib.o libquickjs$(LTOEXT).a
+ 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)

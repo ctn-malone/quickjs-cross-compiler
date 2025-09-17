@@ -1,0 +1,22 @@
+diff --git a/qjs.c b/qjs.c
+index 2eaa9ee..f16e2d6 100644
+--- a/qjs.c
++++ b/qjs.c
+@@ -43,6 +43,8 @@
+ #include "cutils.h"
+ #include "quickjs-libc.h"
+ 
++#include "path.h"
++
+ extern const uint8_t qjsc_repl[];
+ extern const uint32_t qjsc_repl_size;
+ 
+@@ -327,6 +329,8 @@ int main(int argc, char **argv)
+     int strip_flags = 0;
+     size_t stack_size = 0;
+ 
++    set_exe_dir_from_exe_name(argv[0]);
++
+     /* cannot use getopt because we want to pass the command line to
+        the script */
+     optind = 1;
