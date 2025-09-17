@@ -18,16 +18,16 @@
 
         highlight = text: "\\x1b[1;38;5;212m${text}\\x1b[0m";
 
-        qjs_version = "2025-04-26_1";
+        qjs_version = "2025-09-13_1";
         arch =
           if system == "x86_64-linux" then "x86_64"
           else if system == "armv7l-linux" then "armv7l"
           else if system == "aarch64-linux" then "aarch64"
           else "unknown-arch";
         sha256 =
-          if system == "x86_64-linux" then "sha256:12i025crfdggf2h2sr5lkfriwxdy98309b50mvkzfqk4f23kww70"
-          else if system == "armv7l-linux" then "sha256:0imv0f9arajjxj5hapd09sn43mf79lswpgpdcqfaajnhcha4m592"
-          else if system == "aarch64-linux" then "sha256:06y42w0ak9brapvwszm74qrgs5yhlkbcs44kj4anwnx9mmgdv3an"
+          if system == "x86_64-linux" then "sha256:1mh6ynzh3j2g3s9sx7qnjlckxzvq6q1md62j28pl2vhzxkrwclv2"
+          else if system == "armv7l-linux" then "sha256:0n14gxm4dln4z4bzp9hd6wbc95pcmm765mg4b334842rvfy67f77"
+          else if system == "aarch64-linux" then "sha256:095zkdss71042ry1297rnl3j3dslk85y45ykivbl157d3471xfhf"
           else "sha256:0000000000000000000000000000000000000000000000000000";
 
         quickjsStatic = pkgs.stdenv.mkDerivation {
