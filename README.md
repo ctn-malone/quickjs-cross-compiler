@@ -95,14 +95,14 @@ A portable package containing interpreter & compiler can be generated using `doc
 Build a static version of QuickJS (interpreter & compiler)
 Usage: ./docker/build_and_export_qjs.sh [-p|--packages-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-build-image] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2025-09-13')
-        -p, --packages-dir: directory where package will be exported (default: './packages')
+        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/docker/../packages')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.15.3')
+        --ext-lib-version: QuickJS extension library version (default: '0.15.4')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-build-image, --no-force-build-image: force rebuilding docker image (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
-        -u, --upx, --no-upx: compress binaries using upx (on by default)
+        -u, --upx, --no-upx: compress binaries using upx (off by default)
         -h, --help: Prints help
 ```
 
@@ -133,20 +133,20 @@ A portable package containing interpreter & compiler can be generated using `bui
 ```
 ./builder/build_and_export_qjs.sh -h
 Build a static version of QuickJS (interpreter & compiler)
-Usage: ./builder/build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
+Usage: ./build_and_export_qjs.sh [-p|--packages-dir <arg>] [--deps-dir <arg>] [-a|--arch <type string>] [--(no-)ext-lib] [--ext-lib-version <arg>] [-e|--extra-dir <arg>] [--(no-)force-fetch-deps] [--(no-)force-build-deps] [--(no-)force-checkout-qjs] [--(no-)force-build-qjs] [-v|--(no-)verbose] [-u|--(no-)upx] [-h|--help] [<qjs-version>]
         <qjs-version>: QuickJS version (ex: 2020-09-06) (default: '2025-09-13')
-        -p, --packages-dir: directory where package will be exported (default: './packages')
-        --deps-dir: directory where dependencies should be stored/buil (default: './deps')
+        -p, --packages-dir: directory where package will be exported (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../packages')
+        --deps-dir: directory where dependencies should be stored/buil (default: '/home/nico/dev/perso/quickjs-cross-compiler/github-quickjs-cross-compiler/repo/builder/../deps')
         -a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')
         --ext-lib, --no-ext-lib: add QuickJS extension library (off by default)
-        --ext-lib-version: QuickJS extension library version (default: '0.15.3')
+        --ext-lib-version: QuickJS extension library version (default: '0.15.4')
         -e, --extra-dir: extra directory to add into package (empty by default)
         --force-fetch-deps, --no-force-fetch-deps: force re-fetching dependencies (off by default)
         --force-build-deps, --no-force-build-deps: force rebuild of dependencies (off by default)
         --force-checkout-qjs, --no-force-checkout-qjs: clone repository even if it exists (off by default)
         --force-build-qjs, --no-force-build-qjs: force rebuild of QuickJS (off by default)
         -v, --verbose, --no-verbose: enable verbose mode (off by default)
-        -u, --upx, --no-upx: compress binaries using upx (on by default)
+        -u, --upx, --no-upx: compress binaries using upx (off by default)
         -h, --help: Prints help
 ```
 
