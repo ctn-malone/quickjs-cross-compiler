@@ -18,7 +18,7 @@ source "${script_dir}/../builder/env/qjs"
 # ARG_OPTIONAL_REPEATED([extra-dir],[e],[extra directory to add into package],[])
 # ARG_OPTIONAL_BOOLEAN([force-build-image],[],[force rebuilding docker image],[off])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
-# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[on])
+# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[off])
 # ARG_POSITIONAL_SINGLE([qjs-version],[QuickJS version (ex: 2020-09-06)],[$default_qjs_version])
 # ARG_TYPE_GROUP_SET([arch],[type string],[arch],[x86_64,i686,armv7l,aarch64])
 # ARG_HELP([Build a static version of QuickJS (interpreter & compiler)])
@@ -68,7 +68,7 @@ _arg_ext_lib_version="$default_qjs_ext_lib_version"
 _arg_extra_dir=()
 _arg_force_build_image="off"
 _arg_verbose="off"
-_arg_upx="on"
+_arg_upx="off"
 
 
 print_help()
@@ -83,7 +83,7 @@ print_help()
 	printf '\t%s\n' "-e, --extra-dir: extra directory to add into package (empty by default)"
 	printf '\t%s\n' "--force-build-image, --no-force-build-image: force rebuilding docker image (off by default)"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
-	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (on by default)"
+	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (off by default)"
 	printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -258,10 +258,10 @@ build_and_export_package()
     do
         args_extra_dir="${args_extra_dir} -e ${a}"
     done
-    _flag_disable_upx=""
-    [ ${_arg_upx} == "off" ] && _flag_disable_upx="--no-upx"
+    flag_upx=""
+    [ ${_arg_upx} == "on" ] && flag_upx="--upx"
 
-    _docker_cmd="./build_and_export_qjs.sh ${_flag_verbose} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} ${_flag_disable_upx}"
+    _docker_cmd="./build_and_export_qjs.sh ${_flag_verbose} -a ${_arg_arch} ${args_qjs_ext_lib} ${args_extra_dir} ${flag_upx}"
 
     (mkdir -p ${_arg_packages_dir} && \
         docker run --rm \

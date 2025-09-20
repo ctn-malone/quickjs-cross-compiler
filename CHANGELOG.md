@@ -1,8 +1,12 @@
 # Change Log
 
+## [2025-09-13_3]
+
+* chore: disable `upx` for `qjs` and `qjsc` by default (to avoid broken binaries on arm)
+* copy `message.json` to examples
+
 ## [2025-09-13_2]
 
-* chore: QuickJS release `2025-09-13`
 * fix: commit de4d3927b8edff5fbfee1f69cfeef840844259e9
 
 ## [2025-09-13_1]

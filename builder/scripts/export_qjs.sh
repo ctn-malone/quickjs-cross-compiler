@@ -17,7 +17,7 @@ source "${script_dir}/../env/qjs"
 # ARG_OPTIONAL_SINGLE([deps-dir],[d],[directory containing dependencies],[$script_dir/../../deps])
 # ARG_OPTIONAL_SINGLE([packages-dir],[p],[directory where package will be exported],[$script_dir/../../packages])
 # ARG_OPTIONAL_BOOLEAN([verbose],[v],[enable verbose mode],[off])
-# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[on])
+# ARG_OPTIONAL_BOOLEAN([upx],[u],[compress binaries using upx],[off])
 # ARG_OPTIONAL_SINGLE([arch],[a],[target architecture],[x86_64])
 # ARG_OPTIONAL_BOOLEAN([ext-lib],[],[add QuickJS extension library],[off])
 # ARG_OPTIONAL_SINGLE([ext-lib-version],[],[QuickJS extension library version],[$default_qjs_ext_lib_version])
@@ -67,7 +67,7 @@ _arg_qjs_version="$default_qjs_version"
 _arg_deps_dir="$script_dir/../../deps"
 _arg_packages_dir="$script_dir/../../packages"
 _arg_verbose="off"
-_arg_upx="on"
+_arg_upx="off"
 _arg_arch="x86_64"
 _arg_ext_lib="off"
 _arg_ext_lib_version="$default_qjs_ext_lib_version"
@@ -82,7 +82,7 @@ print_help()
 	printf '\t%s\n' "-d, --deps-dir: directory containing dependencies (default: '$script_dir/../../deps')"
 	printf '\t%s\n' "-p, --packages-dir: directory where package will be exported (default: '$script_dir/../../packages')"
 	printf '\t%s\n' "-v, --verbose, --no-verbose: enable verbose mode (off by default)"
-	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (on by default)"
+	printf '\t%s\n' "-u, --upx, --no-upx: compress binaries using upx (off by default)"
 	printf '\t%s\n' "-a, --arch: target architecture. Can be one of: 'x86_64', 'i686', 'armv7l' and 'aarch64' (default: 'x86_64')"
 	printf '\t%s\n' "--ext-lib, --no-ext-lib: add QuickJS extension library (off by default)"
 	printf '\t%s\n' "--ext-lib-version: QuickJS extension library version (default: '$default_qjs_ext_lib_version')"
@@ -305,7 +305,7 @@ export_qjs()
     # list of QuickJS files which need to be compressed using upx
     _qjs_upx_list="qjs qjsc"
     # list of qjs examples/tests files to copy
-    _qjs_examples="examples/fib_module.js examples/hello.js examples/hello_module.js examples/pi_bigdecimal.js examples/pi_bigfloat.js examples/pi_bigint.js tests/microbench.js"
+    _qjs_examples="examples/fib_module.js examples/hello.js examples/hello_module.js examples/pi_bigdecimal.js examples/pi_bigfloat.js examples/pi_bigint.js examples/message.json tests/microbench.js"
     # use 'strip' binary from cross compiler
    _strip="${deps_dir}/musl_cc-${_arg_arch}/strip"
 
