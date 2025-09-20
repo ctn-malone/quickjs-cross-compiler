@@ -11,7 +11,7 @@ declare -A qjs_commits=(
     ["2023-12-09"]="daa35bc1e5d43192098af9b51caeb4f18f73f9f9"
     ["2024-01-13"]="3f81070e573e3592728dbbbd04c84c498b20d6dc"
     ["2025-04-26"]="19abf1888db5884a5758036ff6e7fa2b340acedc"
-    ["2025-09-13"]="fa628f8c523ecac8ce560c081411e91fcaba2d20"
+    ["2025-09-13"]="de4d3927b8edff5fbfee1f69cfeef840844259e9"
 )
 
 # mapping qjs version => package name
@@ -21,9 +21,9 @@ declare -A qjs_packages=(
     ["2021-03-27"]="2021-03-27_4"
     ["2023-12-09"]="2023-12-09_1"
     ["2024-01-13"]="2024-01-13_3"
-    ["2025-09-13"]="2025-09-13_1"
+    ["2025-09-13"]="2025-09-13_2"
 )
 
 # default tag for https://github.com/ctn-malone/qjs-ext-lib
 qjs_ext_lib_repository="https://github.com/ctn-malone/qjs-ext-lib"
-default_qjs_ext_lib_version="0.15.3"
+default_qjs_ext_lib_version="0.15.4"
